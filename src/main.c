@@ -121,6 +121,9 @@ functionality.
 #include "../FreeRTOS_Source/include/task.h"
 #include "../FreeRTOS_Source/include/timers.h"
 
+/* Custom includes */
+#include "types.h"
+
 /* Priorities at which the tasks are created.  The event semaphore task is
 given the maximum priority of ( configMAX_PRIORITIES - 1 ) to ensure it runs as
 soon as the semaphore is given. */
@@ -142,68 +145,25 @@ the queue empty. */
  */
 static void prvSetupHardware( void );
 
+/* DD-scheduler functions */
+void dd_scheduler(void *pvParameters);
+TaskHandle_t dd_tcreate(createTaskParams);
+uint32_t dd_delete(TaskHandle_t);
+uint32_t dd_return_active_list(taskList**);
+uint32_t dd_return_overdue_list(overdueTasks**);
+
 /*-----------------------------------------------------------*/
 
 /* The queue used by the queue send and queue receive tasks. */
 static xQueueHandle xQueue = NULL;
+static taskList xActiveTasks = NULL;
+static overdueTasks xOverdueTasks = NULL;
 
 /* The semaphore (in this case binary) that is used by the FreeRTOS tick hook
  * function and the event semaphore task.
  */
 static xSemaphoreHandle xEventSemaphore = NULL;
 
-/*-----------------------------------------------------------*/
-
-
-typedef enum {
-	CREATE,
-	DELETE,
-	ACTIVE,
-	OVERDUE
-} msgType;
-
-typedef enum {
-	PERIODIC,
-	APERIODIC
-} taskType;
-
-typedef struct {
-	uint32_t deadline;
-	uint32_t execution_time;
-
-} taskParams;
-
-typedef struct {
-	TaskHandle_t t_handle;
-	uint32_t deadline;
-	uint32_t task_type;
-	uint32_t creation_time;
-	struct taskList *next_cell;
-	struct taskList *previous_cell;
-} taskList;
-
-typedef struct {
-	TaskHandle_t tid;
-	uint32_t deadline;
-	uint32_t task_type;
-	uint32_t creation_time;
-	struct overdueTasks *next_cell; struct
-	overdueTasks *previous_cell;
-} overdueTasks;
-
-typedef struct {
-	xQueueHandle cb_queue;
-	xTaskHandle handle;
-	msgType type;
-} queueMsg;
-
-/*-----------------------------------------------------------*/
-
-/* DD-scheduler functions */
-TaskHandle_t dd_tcreate(Task_param);
-uint32_t dd_delete(TaskHandle_t);
-uint32_t dd_return_active_list(taskList**);
-uint32_t dd_return_overdue_list(overdueTasks**);
 /*-----------------------------------------------------------*/
 
 int main(void)
@@ -248,38 +208,110 @@ xTimerHandle xExampleSoftwareTimer = NULL;
 /*-----------------------------------------------------------*/
 
 
+
 void dd_scheduler(void *pvParameters) {
-	msgType ulReceivedValue;
+	void insert(taskProps task) {
+		taskList currTask = xActiveTasks;
+		if (currTask == NULL) {
+			xActiveTasks = task;
+		} else {
+			while (currTask.t_handle !== task.handle) {
+
+			}
+		}
+		return;
+	}
+
+	void delete(taskProps task) {
+		if (xActiveTasks == NULL) {
+			// Something went wrong
+		} else {
+
+		}
+		return;
+	}
+
+	queueMsg msg;
 	while (1) {
-		xQueueReceive( xQueue, &ulReceivedValue, portMAX_DELAY );
+		xQueueReceive( xQueue, &msg, portMAX_DELAY );
+
+		switch(msg.msg_type) {
+		case CREATE:
+			insert(msg.task_props.handle);
+			xQueueSend(msg.cb_queue, "y", portMAX_DELAY);
+			break;
+		case DELETE:
+			delete(msg.task_props.handle);
+			xQueueSend(msg.cb_queue, "y", portMAX_DELAY);
+			break;
+		case ACTIVE:
+			listActive();
+
+			break;
+		case OVERDUE:
+			break;
+		}
 	}
 }
 
-TaskHandle_t dd_tcreate (taskParams task_params){
-//	xTaskHandle xHandle = 	xTaskCreate(tast_params.task,	/* The function that implements the task. */
-//							"some_name", 					/* Text name for the task, just to help debugging. */
-//							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
-//							NULL, 							/* A parameter that can be passed into the task. */
-//							mainMIN_TASK_PRIORITY,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
-//							NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
-//
-//
-//	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
-//	queueMsg msg = {
-//			.cb_queue = cb_queue,
-//			.handle = xHandle,
-//			.type = CREATE
-//	};
-//
-//	xQueueSend(xQueue, &msg, 0);
-//
-//	xQueueReceive(cb_queue, NULL, portMAX_DELAY);
-//	vQueueDelete(cb_queue);
-//
-//	return xHandle;
+TaskHandle_t dd_tcreate (createTaskParams create_task_params){
+
+	TaskHandle_t xHandle = xTaskCreate(
+							create_task_params.func,				/* The function that implements the task. */
+							create_task_params.name, 				/* Text name for the task, just to help debugging. */
+							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
+							NULL, 							/* A parameter that can be passed into the task. */
+							mainMIN_TASK_PRIORITY,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
+							NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
+
+	// Create callback queue for backwards communication
+	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
+	// Build message for global queue
+	queueMsg msg = {
+			.cb_queue = cb_queue,
+			.taskProps = {
+					handle = create_task_params.task_props.handle,
+					deadline = create_task_params.task_props.deadline,
+					execution_time = create_task_params.execution_time,
+					task_type = create_task_params.task_type,
+					creation_time = xTaskGetTickCount()
+			},
+			.type = DELETE;
+	};
+
+	// Put message on global queue
+	xQueueSend(xQueue, &msg, 0);
+
+	// Wait on receiver to call callback queue
+	xQueueReceive(cb_queue, NULL, portMAX_DELAY);
+	// Delete callback queue
+	vQueueDelete(cb_queue);
+
+	return xHandle;
 }
 
 uint32_t dd_delete(TaskHandle_t t_handle){
+
+	// Create callback queue for backwards communication
+	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
+	// Build message for global queue
+	queueMsg msg = {
+			.cb_queue = cb_queue,
+			.taskProps = {
+					handle: t_handle,
+
+			};
+			.type = DELETE
+	};
+
+	// Put message on global queue
+	xQueueSend(xQueue, &msg, 0);
+
+	// Wait on receiver to call callback queue
+	xQueueReceive(cb_queue, NULL, portMAX_DELAY);
+	// Delete callback queue
+	vQueueDelete(cb_queue);
+
 	return 0;
 }
 

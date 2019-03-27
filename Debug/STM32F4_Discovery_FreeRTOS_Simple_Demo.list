@@ -5,13 +5,13 @@ Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
   0 .isr_vector   00000188  08000000  08000000  00010000  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  1 .text         00002d28  08000190  08000190  00010190  2**4
+  1 .text         00002d2c  08000190  08000190  00010190  2**4
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .init_array   00000004  08002eb8  08002eb8  00012eb8  2**2
+  2 .init_array   00000004  08002ebc  08002ebc  00012ebc  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  3 .fini_array   00000004  08002ebc  08002ebc  00012ebc  2**2
+  3 .fini_array   00000004  08002ec0  08002ec0  00012ec0  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  4 .data         00000018  20000000  08002ec0  00020000  2**2
+  4 .data         00000018  20000000  08002ec4  00020000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
   5 .ccmram       00000000  10000000  10000000  00020018  2**0
                   CONTENTS
@@ -21,23 +21,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
   8 .ARM.attributes 0000002e  00000000  00000000  00020018  2**0
                   CONTENTS, READONLY
-  9 .debug_info   0000a33c  00000000  00000000  00020046  2**0
+  9 .debug_info   0000a465  00000000  00000000  00020046  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_abbrev 00001a1e  00000000  00000000  0002a382  2**0
+ 10 .debug_abbrev 00001ab2  00000000  00000000  0002a4ab  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_aranges 000008f8  00000000  00000000  0002bda0  2**3
+ 11 .debug_aranges 00000908  00000000  00000000  0002bf60  2**3
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000810  00000000  00000000  0002c698  2**3
+ 12 .debug_ranges 00000820  00000000  00000000  0002c868  2**3
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_line   000044a5  00000000  00000000  0002cea8  2**0
+ 13 .debug_line   000044ea  00000000  00000000  0002d088  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_str    00003884  00000000  00000000  0003134d  2**0
+ 14 .debug_str    000038af  00000000  00000000  00031572  2**0
                   CONTENTS, READONLY, DEBUGGING
- 15 .comment      0000007c  00000000  00000000  00034bd1  2**0
+ 15 .comment      0000007c  00000000  00000000  00034e21  2**0
                   CONTENTS, READONLY
- 16 .debug_frame  0000236c  00000000  00000000  00034c50  2**2
+ 16 .debug_frame  000023b8  00000000  00000000  00034ea0  2**2
                   CONTENTS, READONLY, DEBUGGING
- 17 .stabstr      0000003f  00000000  00000000  00036fbc  2**0
+ 17 .stabstr      0000003f  00000000  00000000  00037258  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -56,7 +56,7 @@ Disassembly of section .text:
  80001a6:	bd10      	pop	{r4, pc}
  80001a8:	20000018 	.word	0x20000018
  80001ac:	00000000 	.word	0x00000000
- 80001b0:	08002ea0 	.word	0x08002ea0
+ 80001b0:	08002ea4 	.word	0x08002ea4
 
 080001b4 <frame_dummy>:
  80001b4:	b508      	push	{r3, lr}
@@ -68,7 +68,7 @@ Disassembly of section .text:
  80001c2:	bd08      	pop	{r3, pc}
  80001c4:	00000000 	.word	0x00000000
  80001c8:	2000001c 	.word	0x2000001c
- 80001cc:	08002ea0 	.word	0x08002ea0
+ 80001cc:	08002ea4 	.word	0x08002ea4
 
 080001d0 <vListInitialise>:
 /*-----------------------------------------------------------
@@ -8184,7 +8184,7 @@ LoopFillZerobss:
   bx  lr    
  8002c4a:	4770      	bx	lr
   ldr  r3, =_sidata
- 8002c4c:	08002ec0 	.word	0x08002ec0
+ 8002c4c:	08002ec4 	.word	0x08002ec4
   ldr  r0, =_sdata
  8002c50:	20000000 	.word	0x20000000
   ldr  r3, =_edata
@@ -8563,7 +8563,7 @@ static void SetSysClock(void)
  8002e0a:	d109      	bne.n	8002e20 <__libc_init_array+0x24>
  8002e0c:	4e0b      	ldr	r6, [pc, #44]	; (8002e3c <__libc_init_array+0x40>)
  8002e0e:	4c0c      	ldr	r4, [pc, #48]	; (8002e40 <__libc_init_array+0x44>)
- 8002e10:	f000 f846 	bl	8002ea0 <_init>
+ 8002e10:	f000 f848 	bl	8002ea4 <_init>
  8002e14:	1ba4      	subs	r4, r4, r6
  8002e16:	10a4      	asrs	r4, r4, #2
  8002e18:	2500      	movs	r5, #0
@@ -8578,10 +8578,10 @@ static void SetSysClock(void)
  8002e2e:	4798      	blx	r3
  8002e30:	3501      	adds	r5, #1
  8002e32:	e7f2      	b.n	8002e1a <__libc_init_array+0x1e>
- 8002e34:	08002eb8 	.word	0x08002eb8
- 8002e38:	08002eb8 	.word	0x08002eb8
- 8002e3c:	08002eb8 	.word	0x08002eb8
- 8002e40:	08002ebc 	.word	0x08002ebc
+ 8002e34:	08002ebc 	.word	0x08002ebc
+ 8002e38:	08002ebc 	.word	0x08002ebc
+ 8002e3c:	08002ebc 	.word	0x08002ebc
+ 8002e40:	08002ec0 	.word	0x08002ec0
 
 08002e44 <memcpy>:
  8002e44:	b510      	push	{r4, lr}
@@ -8616,19 +8616,20 @@ static void SetSysClock(void)
  8002e94:	6553746e 	.word	0x6553746e
  8002e98:	6870616d 	.word	0x6870616d
  8002e9c:	0065726f 	.word	0x0065726f
+ 8002ea0:	00000079 	.word	0x00000079
 
-08002ea0 <_init>:
- 8002ea0:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
- 8002ea2:	bf00      	nop
- 8002ea4:	bcf8      	pop	{r3, r4, r5, r6, r7}
- 8002ea6:	bc08      	pop	{r3}
- 8002ea8:	469e      	mov	lr, r3
- 8002eaa:	4770      	bx	lr
+08002ea4 <_init>:
+ 8002ea4:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 8002ea6:	bf00      	nop
+ 8002ea8:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 8002eaa:	bc08      	pop	{r3}
+ 8002eac:	469e      	mov	lr, r3
+ 8002eae:	4770      	bx	lr
 
-08002eac <_fini>:
- 8002eac:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
- 8002eae:	bf00      	nop
- 8002eb0:	bcf8      	pop	{r3, r4, r5, r6, r7}
- 8002eb2:	bc08      	pop	{r3}
- 8002eb4:	469e      	mov	lr, r3
- 8002eb6:	4770      	bx	lr
+08002eb0 <_fini>:
+ 8002eb0:	b5f8      	push	{r3, r4, r5, r6, r7, lr}
+ 8002eb2:	bf00      	nop
+ 8002eb4:	bcf8      	pop	{r3, r4, r5, r6, r7}
+ 8002eb6:	bc08      	pop	{r3}
+ 8002eb8:	469e      	mov	lr, r3
+ 8002eba:	4770      	bx	lr

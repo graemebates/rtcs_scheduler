@@ -1947,12 +1947,16 @@ Discarded input sections
  .text          0x00000000        0x0 src\main.o
  .data          0x00000000        0x0 src\main.o
  .bss           0x00000000        0x0 src\main.o
+ .text.insert.9052
+                0x00000000       0x18 src\main.o
  .text.dd_scheduler
-                0x00000000       0x20 src\main.o
+                0x00000000       0x88 src\main.o
+ .text.delete.9055
+                0x00000000       0x18 src\main.o
  .text.dd_tcreate
-                0x00000000       0x1a src\main.o
+                0x00000000       0x70 src\main.o
  .text.dd_delete
-                0x00000000       0x16 src\main.o
+                0x00000000       0x54 src\main.o
  .text.dd_return_active_list
                 0x00000000       0x16 src\main.o
  .text.dd_return_overdue_list
@@ -2119,7 +2123,7 @@ LOAD c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../l
                 0x08000000                g_pfnVectors
                 0x08000188                . = ALIGN (0x4)
 
-.text           0x08000190     0x2d28
+.text           0x08000190     0x2d2c
                 0x08000190                . = ALIGN (0x4)
  *(.text)
  .text          0x08000190       0x40 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
@@ -2496,66 +2500,67 @@ LOAD c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../l
  *fill*         0x08002e71        0x3 
  .rodata        0x08002e74        0xd FreeRTOS_Source\timers.o
  *fill*         0x08002e81        0x3 
- .rodata        0x08002e84       0x1c src\main.o
+ .rodata        0x08002e84       0x1e src\main.o
  *(.rodata*)
  *(.glue_7)
- .glue_7        0x08002ea0        0x0 linker stubs
+ .glue_7        0x08002ea2        0x0 linker stubs
  *(.glue_7t)
- .glue_7t       0x08002ea0        0x0 linker stubs
+ .glue_7t       0x08002ea2        0x0 linker stubs
  *(.eh_frame)
- .eh_frame      0x08002ea0        0x0 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
+ *fill*         0x08002ea2        0x2 
+ .eh_frame      0x08002ea4        0x0 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
  *(.init)
- .init          0x08002ea0        0x4 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crti.o
-                0x08002ea0                _init
- .init          0x08002ea4        0x8 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtn.o
+ .init          0x08002ea4        0x4 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crti.o
+                0x08002ea4                _init
+ .init          0x08002ea8        0x8 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtn.o
  *(.fini)
- .fini          0x08002eac        0x4 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crti.o
-                0x08002eac                _fini
- .fini          0x08002eb0        0x8 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtn.o
-                0x08002eb8                . = ALIGN (0x4)
-                0x08002eb8                _etext = .
+ .fini          0x08002eb0        0x4 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crti.o
+                0x08002eb0                _fini
+ .fini          0x08002eb4        0x8 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtn.o
+                0x08002ebc                . = ALIGN (0x4)
+                0x08002ebc                _etext = .
 
-.vfp11_veneer   0x08002eb8        0x0
- .vfp11_veneer  0x08002eb8        0x0 linker stubs
+.vfp11_veneer   0x08002ebc        0x0
+ .vfp11_veneer  0x08002ebc        0x0 linker stubs
 
-.v4_bx          0x08002eb8        0x0
- .v4_bx         0x08002eb8        0x0 linker stubs
+.v4_bx          0x08002ebc        0x0
+ .v4_bx         0x08002ebc        0x0 linker stubs
 
-.iplt           0x08002eb8        0x0
- .iplt          0x08002eb8        0x0 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
+.iplt           0x08002ebc        0x0
+ .iplt          0x08002ebc        0x0 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
 
-.rel.dyn        0x08002eb8        0x0
- .rel.iplt      0x08002eb8        0x0 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
+.rel.dyn        0x08002ebc        0x0
+ .rel.iplt      0x08002ebc        0x0 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
 
 .ARM.extab
  *(.ARM.extab* .gnu.linkonce.armextab.*)
 
-.ARM            0x08002eb8        0x0
-                0x08002eb8                __exidx_start = .
+.ARM            0x08002ebc        0x0
+                0x08002ebc                __exidx_start = .
  *(.ARM.exidx*)
-                0x08002eb8                __exidx_end = .
+                0x08002ebc                __exidx_end = .
 
-.preinit_array  0x08002eb8        0x0
-                0x08002eb8                PROVIDE (__preinit_array_start, .)
+.preinit_array  0x08002ebc        0x0
+                0x08002ebc                PROVIDE (__preinit_array_start, .)
  *(.preinit_array*)
-                0x08002eb8                PROVIDE (__preinit_array_end, .)
+                0x08002ebc                PROVIDE (__preinit_array_end, .)
 
-.init_array     0x08002eb8        0x4
-                0x08002eb8                PROVIDE (__init_array_start, .)
+.init_array     0x08002ebc        0x4
+                0x08002ebc                PROVIDE (__init_array_start, .)
  *(SORT(.init_array.*))
  *(.init_array*)
- .init_array    0x08002eb8        0x4 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
-                0x08002ebc                PROVIDE (__init_array_end, .)
+ .init_array    0x08002ebc        0x4 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
+                0x08002ec0                PROVIDE (__init_array_end, .)
 
-.fini_array     0x08002ebc        0x4
+.fini_array     0x08002ec0        0x4
                 [!provide]                PROVIDE (__fini_array_start, .)
  *(SORT(.fini_array.*))
  *(.fini_array*)
- .fini_array    0x08002ebc        0x4 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
+ .fini_array    0x08002ec0        0x4 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
                 [!provide]                PROVIDE (__fini_array_end, .)
-                0x08002ec0                _sidata = LOADADDR (.data)
+                0x08002ec4                _sidata = LOADADDR (.data)
 
-.data           0x20000000       0x18 load address 0x08002ec0
+.data           0x20000000       0x18 load address 0x08002ec4
                 0x20000000                . = ALIGN (0x4)
                 0x20000000                _sdata = .
  *(.data)
@@ -2579,12 +2584,12 @@ LOAD c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../l
                 0x20000014                SystemCoreClock
                 0x20000018                . = ALIGN (0x4)
                 0x20000018                _edata = .
-                0x08002ed8                _siccmram = LOADADDR (.ccmram)
+                0x08002edc                _siccmram = LOADADDR (.ccmram)
 
-.igot.plt       0x20000018        0x0 load address 0x08002ed8
+.igot.plt       0x20000018        0x0 load address 0x08002edc
  .igot.plt      0x20000018        0x0 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtbegin.o
 
-.ccmram         0x10000000        0x0 load address 0x08002ed8
+.ccmram         0x10000000        0x0 load address 0x08002edc
                 0x10000000                . = ALIGN (0x4)
                 0x10000000                _sccmram = .
  *(.ccmram)
@@ -2669,7 +2674,7 @@ LOAD c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../l
  .bss.xQueue    0x20001d84        0x4 src\main.o
  .bss.xEventSemaphore
                 0x20001d88        0x4 src\main.o
- .bss.ulCount.9064
+ .bss.ulCount.9089
                 0x20001d8c        0x4 src\main.o
  *(COMMON)
  COMMON         0x20001d90       0x40 FreeRTOS_Source\queue.o
@@ -2750,7 +2755,7 @@ LOAD c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../l
                 0x0000040d       0x22 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtn.o
 OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
 
-.debug_info     0x00000000     0xa33c
+.debug_info     0x00000000     0xa465
  .debug_info    0x00000000      0xac3 FreeRTOS_Source\list.o
  .debug_info    0x00000ac3      0x50b FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_info    0x00000fce      0x9e9 FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2762,12 +2767,12 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_info    0x0000788b      0xb1a Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_info    0x000083a5     0x108b Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_info    0x00009430      0x12d src\STM32F4-Discovery_callback.o
- .debug_info    0x0000955d      0x64a src\main.o
- .debug_info    0x00009ba7       0xa4 src\startup_stm32f4xx.o
- .debug_info    0x00009c4b      0x121 src\stm32f4xx_it.o
- .debug_info    0x00009d6c      0x5d0 src\system_stm32f4xx.o
+ .debug_info    0x0000955d      0x773 src\main.o
+ .debug_info    0x00009cd0       0xa4 src\startup_stm32f4xx.o
+ .debug_info    0x00009d74      0x121 src\stm32f4xx_it.o
+ .debug_info    0x00009e95      0x5d0 src\system_stm32f4xx.o
 
-.debug_abbrev   0x00000000     0x1a1e
+.debug_abbrev   0x00000000     0x1ab2
  .debug_abbrev  0x00000000      0x1c5 FreeRTOS_Source\list.o
  .debug_abbrev  0x000001c5      0x1d5 FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_abbrev  0x0000039a      0x245 FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2779,12 +2784,12 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_abbrev  0x00001196      0x17a Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_abbrev  0x00001310      0x276 Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_abbrev  0x00001586       0xa3 src\STM32F4-Discovery_callback.o
- .debug_abbrev  0x00001629      0x213 src\main.o
- .debug_abbrev  0x0000183c       0x12 src\startup_stm32f4xx.o
- .debug_abbrev  0x0000184e       0x78 src\stm32f4xx_it.o
- .debug_abbrev  0x000018c6      0x158 src\system_stm32f4xx.o
+ .debug_abbrev  0x00001629      0x2a7 src\main.o
+ .debug_abbrev  0x000018d0       0x12 src\startup_stm32f4xx.o
+ .debug_abbrev  0x000018e2       0x78 src\stm32f4xx_it.o
+ .debug_abbrev  0x0000195a      0x158 src\system_stm32f4xx.o
 
-.debug_aranges  0x00000000      0x8f8
+.debug_aranges  0x00000000      0x908
  .debug_aranges
                 0x00000000       0x40 FreeRTOS_Source\list.o
  .debug_aranges
@@ -2808,15 +2813,15 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_aranges
                 0x000007b0       0x30 src\STM32F4-Discovery_callback.o
  .debug_aranges
-                0x000007e0       0x78 src\main.o
+                0x000007e0       0x88 src\main.o
  .debug_aranges
-                0x00000858       0x28 src\startup_stm32f4xx.o
+                0x00000868       0x28 src\startup_stm32f4xx.o
  .debug_aranges
-                0x00000880       0x48 src\stm32f4xx_it.o
+                0x00000890       0x48 src\stm32f4xx_it.o
  .debug_aranges
-                0x000008c8       0x30 src\system_stm32f4xx.o
+                0x000008d8       0x30 src\system_stm32f4xx.o
 
-.debug_ranges   0x00000000      0x810
+.debug_ranges   0x00000000      0x820
  .debug_ranges  0x00000000       0x30 FreeRTOS_Source\list.o
  .debug_ranges  0x00000030       0x70 FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_ranges  0x000000a0       0x28 FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2828,12 +2833,12 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_ranges  0x00000520       0xd0 Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_ranges  0x000005f0      0x120 Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_ranges  0x00000710       0x20 src\STM32F4-Discovery_callback.o
- .debug_ranges  0x00000730       0x68 src\main.o
- .debug_ranges  0x00000798       0x20 src\startup_stm32f4xx.o
- .debug_ranges  0x000007b8       0x38 src\stm32f4xx_it.o
- .debug_ranges  0x000007f0       0x20 src\system_stm32f4xx.o
+ .debug_ranges  0x00000730       0x78 src\main.o
+ .debug_ranges  0x000007a8       0x20 src\startup_stm32f4xx.o
+ .debug_ranges  0x000007c8       0x38 src\stm32f4xx_it.o
+ .debug_ranges  0x00000800       0x20 src\system_stm32f4xx.o
 
-.debug_line     0x00000000     0x44a5
+.debug_line     0x00000000     0x44ea
  .debug_line    0x00000000      0x31c FreeRTOS_Source\list.o
  .debug_line    0x0000031c      0x388 FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_line    0x000006a4      0x2f6 FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2845,12 +2850,12 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_line    0x00002f4b      0x46e Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_line    0x000033b9      0x70f Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_line    0x00003ac8      0x1c4 src\STM32F4-Discovery_callback.o
- .debug_line    0x00003c8c      0x395 src\main.o
- .debug_line    0x00004021       0x77 src\startup_stm32f4xx.o
- .debug_line    0x00004098      0x1f4 src\stm32f4xx_it.o
- .debug_line    0x0000428c      0x219 src\system_stm32f4xx.o
+ .debug_line    0x00003c8c      0x3da src\main.o
+ .debug_line    0x00004066       0x77 src\startup_stm32f4xx.o
+ .debug_line    0x000040dd      0x1f4 src\stm32f4xx_it.o
+ .debug_line    0x000042d1      0x219 src\system_stm32f4xx.o
 
-.debug_str      0x00000000     0x3884
+.debug_str      0x00000000     0x38af
  .debug_str     0x00000000      0x6ea FreeRTOS_Source\list.o
                                 0x76f (size before relaxing)
  .debug_str     0x000006ea      0x26d FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
@@ -2873,11 +2878,11 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
                                0x1119 (size before relaxing)
  .debug_str     0x00003493       0x84 src\STM32F4-Discovery_callback.o
                                 0x2a3 (size before relaxing)
- .debug_str     0x00003517      0x246 src\main.o
-                                0x532 (size before relaxing)
- .debug_str     0x0000375d       0x7b src\stm32f4xx_it.o
+ .debug_str     0x00003517      0x271 src\main.o
+                                0x57d (size before relaxing)
+ .debug_str     0x00003788       0x7b src\stm32f4xx_it.o
                                 0x279 (size before relaxing)
- .debug_str     0x000037d8       0xac src\system_stm32f4xx.o
+ .debug_str     0x00003803       0xac src\system_stm32f4xx.o
                                 0x430 (size before relaxing)
 
 .comment        0x00000000       0x7c
@@ -2897,7 +2902,7 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .comment       0x0000007c       0x7d src\stm32f4xx_it.o
  .comment       0x0000007c       0x7d src\system_stm32f4xx.o
 
-.debug_frame    0x00000000     0x236c
+.debug_frame    0x00000000     0x23b8
  .debug_frame   0x00000000       0xd8 FreeRTOS_Source\list.o
  .debug_frame   0x000000d8      0x19c FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_frame   0x00000274       0x9c FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2909,12 +2914,12 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_frame   0x000016fc      0x3f4 Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_frame   0x00001af0      0x4bc Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_frame   0x00001fac       0x70 src\STM32F4-Discovery_callback.o
- .debug_frame   0x0000201c      0x1b0 src\main.o
- .debug_frame   0x000021cc       0xb0 src\stm32f4xx_it.o
- .debug_frame   0x0000227c       0x7c src\system_stm32f4xx.o
- .debug_frame   0x000022f8       0x2c c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-init.o)
- .debug_frame   0x00002324       0x28 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memcpy-stub.o)
- .debug_frame   0x0000234c       0x20 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memset.o)
+ .debug_frame   0x0000201c      0x1fc src\main.o
+ .debug_frame   0x00002218       0xb0 src\stm32f4xx_it.o
+ .debug_frame   0x000022c8       0x7c src\system_stm32f4xx.o
+ .debug_frame   0x00002344       0x2c c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-init.o)
+ .debug_frame   0x00002370       0x28 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memcpy-stub.o)
+ .debug_frame   0x00002398       0x20 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memset.o)
 
 .stabstr        0x00000000       0x3f
  .stabstr       0x00000000       0x3f c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libnosys.a(write.o)
@@ -3823,6 +3828,7 @@ errno                                             c:/program files (x86)/atollic
                                                   c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libnosys.a(write.o)
 fprintf                                           src\tiny_printf.o
 g_pfnVectors                                      src\startup_stm32f4xx.o
+listActive                                        src\main.o
 main                                              src\main.o
                                                   src\startup_stm32f4xx.o
 memcpy                                            c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memcpy-stub.o)
@@ -3911,6 +3917,7 @@ vQueueAddToRegistry                               FreeRTOS_Source\queue.o
                                                   src\main.o
                                                   FreeRTOS_Source\timers.o
 vQueueDelete                                      FreeRTOS_Source\queue.o
+                                                  src\main.o
 vQueueUnregisterQueue                             FreeRTOS_Source\queue.o
 vQueueWaitForMessageRestricted                    FreeRTOS_Source\queue.o
                                                   FreeRTOS_Source\timers.o
@@ -3980,6 +3987,7 @@ xQueueTakeMutexRecursive                          FreeRTOS_Source\queue.o
 xTaskCheckForTimeOut                              FreeRTOS_Source\tasks.o
                                                   FreeRTOS_Source\queue.o
 xTaskCreate                                       FreeRTOS_Source\tasks.o
+                                                  src\main.o
                                                   FreeRTOS_Source\timers.o
 xTaskGenericNotify                                FreeRTOS_Source\tasks.o
 xTaskGenericNotifyFromISR                         FreeRTOS_Source\tasks.o
