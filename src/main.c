@@ -89,30 +89,6 @@ The main() Function:
 main() creates the tasks and software timers described in this section, before
 starting the scheduler.
 
-The Queue Send Task:
-The queue send task is implemented by the prvQueueSendTask() function.
-The task uses the FreeRTOS vTaskDelayUntil() and xQueueSend() API functions to
-periodically send the number 100 on a queue.  The period is set to 200ms.  See
-the comments in the function for more details.
-http://www.freertos.org/vtaskdelayuntil.html
-http://www.freertos.org/a00117.html
-
-The Queue Receive Task:
-The queue receive task is implemented by the prvQueueReceiveTask() function.
-The task uses the FreeRTOS xQueueReceive() API function to receive values from
-a queue.  The values received are those sent by the queue send task.  The queue
-receive task increments the ulCountOfItemsReceivedOnQueue variable each time it
-receives the value 100.  Therefore, as values are sent to the queue every 200ms,
-the value of ulCountOfItemsReceivedOnQueue will increase by 5 every second.
-http://www.freertos.org/a00118.html
-
-An example software timer:
-A software timer is created with an auto reloading period of 1000ms.  The
-timer's callback function increments the ulCountOfTimerCallbackExecutions
-variable each time it is called.  Therefore the value of
-ulCountOfTimerCallbackExecutions will count seconds.
-http://www.freertos.org/RTOS-software-timer.html
-
 The FreeRTOS RTOS tick hook (or callback) function:
 The tick hook function executes in the context of the FreeRTOS tick interrupt.
 The function 'gives' a semaphore every 500th time it executes.  The semaphore
@@ -153,18 +129,10 @@ soon as the semaphore is given. */
 #define mainEVENT_SEMAPHORE_TASK_PRIORITY	( configMAX_PRIORITIES - 1 )
 #define mainMIN_TASK_PRIORITY				( 0 )
 
-/* The rate at which data is sent to the queue, specified in milliseconds, and
-converted to ticks using the portTICK_RATE_MS constant. */
-#define mainQUEUE_SEND_PERIOD_MS			( 200 / portTICK_RATE_MS )
-
-/* The period of the example software timer, specified in milliseconds, and
-converted to ticks using the portTICK_RATE_MS constant. */
-#define mainSOFTWARE_TIMER_PERIOD_MS		( 1000 / portTICK_RATE_MS )
-
 /* The number of items the queue can hold.  This is 1 as the receive task
 will remove items as they are added, meaning the send task should always find
 the queue empty. */
-#define mainQUEUE_LENGTH					( 1 )
+#define mainQUEUE_LENGTH					( 100 )
 
 /*-----------------------------------------------------------*/
 
@@ -173,24 +141,6 @@ the queue empty. */
  * that was not already performed before main() was called.
  */
 static void prvSetupHardware( void );
-
-/*
- * The queue send and receive tasks as described in the comments at the top of
- * this file.
- */
-static void prvQueueReceiveTask( void *pvParameters );
-static void prvQueueSendTask( void *pvParameters );
-
-/*
- * The callback function assigned to the example software timer as described at
- * the top of this file.
- */
-static void vExampleTimerCallback( xTimerHandle xTimer );
-
-/*
- * The event semaphore task as described at the top of this file.
- */
-static void prvEventSemaphoreTask( void *pvParameters );
 
 /*-----------------------------------------------------------*/
 
@@ -202,20 +152,58 @@ static xQueueHandle xQueue = NULL;
  */
 static xSemaphoreHandle xEventSemaphore = NULL;
 
-/* The counters used by the various examples.  The usage is described in the
- * comments at the top of this file.
- */
-static volatile uint32_t ulCountOfTimerCallbackExecutions = 0;
-static volatile uint32_t ulCountOfItemsReceivedOnQueue = 0;
-static volatile uint32_t ulCountOfReceivedSemaphores = 0;
+/*-----------------------------------------------------------*/
+
+
+typedef enum {
+	CREATE,
+	DELETE,
+	ACTIVE,
+	OVERDUE
+} msgType;
+
+typedef enum {
+	PERIODIC,
+	APERIODIC
+} taskType;
+
+typedef struct {
+	uint32_t deadline;
+	uint32_t execution_time;
+
+} taskParams;
+
+typedef struct {
+	TaskHandle_t t_handle;
+	uint32_t deadline;
+	uint32_t task_type;
+	uint32_t creation_time;
+	struct taskList *next_cell;
+	struct taskList *previous_cell;
+} taskList;
+
+typedef struct {
+	TaskHandle_t tid;
+	uint32_t deadline;
+	uint32_t task_type;
+	uint32_t creation_time;
+	struct overdueTasks *next_cell; struct
+	overdueTasks *previous_cell;
+} overdueTasks;
+
+typedef struct {
+	xQueueHandle cb_queue;
+	xTaskHandle handle;
+	msgType type;
+} queueMsg;
 
 /*-----------------------------------------------------------*/
 
 /* DD-scheduler functions */
 TaskHandle_t dd_tcreate(Task_param);
-uint_32 dd_delete(TaskHandle_t);
-uint_32 dd_return_active_list(**list);
-uint_32 dd_return_overdue_list(**list);
+uint32_t dd_delete(TaskHandle_t);
+uint32_t dd_return_active_list(taskList**);
+uint32_t dd_return_overdue_list(overdueTasks**);
 /*-----------------------------------------------------------*/
 
 int main(void)
@@ -241,46 +229,6 @@ xTimerHandle xExampleSoftwareTimer = NULL;
 	/* Add to the registry, for the benefit of kernel aware debugging. */
 	vQueueAddToRegistry( xEventSemaphore, "xEventSemaphore" );
 
-
-	/* Create the queue receive task as described in the comments at the top
-	of this	file.  http://www.freertos.org/a00125.html */
-	xTaskCreate( 	prvQueueReceiveTask,			/* The function that implements the task. */
-					"Rx", 		/* Text name for the task, just to help debugging. */
-					configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
-					NULL, 							/* A parameter that can be passed into the task.  Not used in this simple demo. */
-					mainQUEUE_RECEIVE_TASK_PRIORITY,/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
-					NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
-
-
-	/* Create the queue send task in exactly the same way.  Again, this is
-	described in the comments at the top of the file. */
-	xTaskCreate( 	prvQueueSendTask,
-					"TX",
-					configMINIMAL_STACK_SIZE,
-					NULL,
-					mainQUEUE_SEND_TASK_PRIORITY,
-					NULL );
-
-
-	/* Create the task that is synchronised with an interrupt using the
-	xEventSemaphore semaphore. */
-	xTaskCreate( 	prvEventSemaphoreTask,
-					"Sem",
-					configMINIMAL_STACK_SIZE,
-					NULL,
-					mainEVENT_SEMAPHORE_TASK_PRIORITY,
-					NULL );
-
-
-	/* Create the software timer as described in the comments at the top of
-	this file.  http://www.freertos.org/FreeRTOS-timers-xTimerCreate.html. */
-	xExampleSoftwareTimer = xTimerCreate("LEDTimer", /* A text name, purely to help debugging. */
-								mainSOFTWARE_TIMER_PERIOD_MS,		/* The timer period, in this case 1000ms (1s). */
-								pdTRUE,								/* This is a periodic timer, so xAutoReload is set to pdTRUE. */
-								( void * ) 0,						/* The ID is not used, so can be set to anything. */
-								vExampleTimerCallback				/* The callback function that switches the LED off. */
-							);
-
 	/* Start the created timer.  A block time of zero is used as the timer
 	command queue cannot possibly be full here (this is the first timer to
 	be created, and it is not yet running).
@@ -299,46 +247,6 @@ xTimerHandle xExampleSoftwareTimer = NULL;
 }
 /*-----------------------------------------------------------*/
 
-enum msgType {
-	CREATE,
-	DELETE,
-	ACTIVE,
-	OVERDUE
-};
-
-enum taskType {
-	PERIODIC,
-	APERIODIC
-};
-
-struct taskParams {
-	uint_32 deadline;
-	uint_32 execution_time;
-};
-
-struct taskList {
-	TaskHandle_t t_handle;
-	uint_32 deadline;
-	uint_32 task_type;
-	uint_32 creation_time;
-	struct taskList *next_cell;
-	struct taskList *previous_cell;
-};
-
-struct overdueTasks {
-	TaskHandle_t tid;
-	uint_32 deadline;
-	uint_32 task_type;
-	uint_32 creation_time;
-	struct overdueTasks *next_cell; struct
-	overdueTasks *previous_cell;
-};
-
-struct queueMsg {
-	xQueueHandle cb_queue;
-	xTaskHandle handle;
-	msgType type;
-};
 
 void dd_scheduler(void *pvParameters) {
 	msgType ulReceivedValue;
@@ -347,106 +255,42 @@ void dd_scheduler(void *pvParameters) {
 	}
 }
 
-TaskHandle_t dd_tcreate (struct taskParams){
-	xTaskHandle xHandle = 	xTaskCreate(prvQueueReceiveTask,/* The function that implements the task. */
-							"some_name", 					/* Text name for the task, just to help debugging. */
-							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
-							NULL, 							/* A parameter that can be passed into the task. */
-							mainMIN_TASK_PRIORITY,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
-							NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
-
-
-	cb_queue = xQueueCreate(1, sizeof(char));
-	queueMsg msg = queueMsg(cb_queue, xHandle, CREATE);
-
-	xQueueSend(xQueue, &msg, 0);
-
-	xQueueReceive(cb_queue, NULL, portMAX_DELAY);
-	vQueueDelete(cb_queue);
-
-	return xHandle;
+TaskHandle_t dd_tcreate (taskParams task_params){
+//	xTaskHandle xHandle = 	xTaskCreate(tast_params.task,	/* The function that implements the task. */
+//							"some_name", 					/* Text name for the task, just to help debugging. */
+//							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
+//							NULL, 							/* A parameter that can be passed into the task. */
+//							mainMIN_TASK_PRIORITY,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
+//							NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
+//
+//
+//	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
+//	queueMsg msg = {
+//			.cb_queue = cb_queue,
+//			.handle = xHandle,
+//			.type = CREATE
+//	};
+//
+//	xQueueSend(xQueue, &msg, 0);
+//
+//	xQueueReceive(cb_queue, NULL, portMAX_DELAY);
+//	vQueueDelete(cb_queue);
+//
+//	return xHandle;
 }
 
-uint_32 dd_delete(TaskHandle_t t_handle){
+uint32_t dd_delete(TaskHandle_t t_handle){
 	return 0;
 }
 
-uint_32 dd_return_active_list(struct task_list **list){
+uint32_t dd_return_active_list(taskList **list){
 	return 0;
 }
 
-uint_32 dd_return_overdue_list(struct overdue_tasks **list){
+uint32_t dd_return_overdue_list(overdueTasks **list){
 	return 0;
 }
 
-static void vExampleTimerCallback( xTimerHandle xTimer )
-{
-	/* The timer has expired.  Count the number of times this happens.  The
-	timer that calls this function is an auto re-load timer, so it will
-	execute periodically. http://www.freertos.org/RTOS-software-timer.html */
-	ulCountOfTimerCallbackExecutions++;
-}
-/*-----------------------------------------------------------*/
-
-static void prvQueueSendTask( void *pvParameters )
-{
-portTickType xNextWakeTime;
-const uint32_t ulValueToSend = 100UL;
-
-	/* Initialise xNextWakeTime - this only needs to be done once. */
-	xNextWakeTime = xTaskGetTickCount();
-
-	for( ;; )
-	{
-		/* Place this task in the blocked state until it is time to run again.
-		The block time is specified in ticks, the constant used converts ticks
-		to ms.  While in the Blocked state this task will not consume any CPU
-		time.  http://www.freertos.org/vtaskdelayuntil.html */
-		vTaskDelayUntil( &xNextWakeTime, mainQUEUE_SEND_PERIOD_MS );
-
-		/* Send to the queue - causing the queue receive task to unblock and
-		increment its counter.  0 is used as the block time so the sending
-		operation will not block - it shouldn't need to block as the queue
-		should always be empty at this point in the code. */
-		xQueueSend( xQueue, &ulValueToSend, 0 );
-	}
-}
-/*-----------------------------------------------------------*/
-
-static void prvQueueReceiveTask( void *pvParameters )
-{
-	msgType ulReceivedValue;
-
-	for( ;; )
-	{
-		/* Wait until something arrives in the queue - this task will block
-		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
-		FreeRTOSConfig.h.  http://www.freertos.org/a00118.html */
-		xQueueReceive( xQueue, &ulReceivedValue, portMAX_DELAY );
-
-		/*  To get here something must have been received from the queue, but
-		is it the expected value?  If it is, increment the counter. */
-		if( ulReceivedValue == 100UL )
-		{
-			/* Count the number of items that have been received correctly. */
-			ulCountOfItemsReceivedOnQueue++;
-		}
-	}
-}
-/*-----------------------------------------------------------*/
-
-static void prvEventSemaphoreTask( void *pvParameters )
-{
-	for( ;; )
-	{
-		/* Block until the semaphore is 'given'. */
-		xSemaphoreTake( xEventSemaphore, portMAX_DELAY );
-
-		/* Count the number of times the semaphore is received. */
-		ulCountOfReceivedSemaphores++;
-	}
-}
-/*-----------------------------------------------------------*/
 
 void vApplicationTickHook( void )
 {
@@ -541,7 +385,7 @@ static void prvSetupHardware( void )
 	http://www.freertos.org/RTOS-Cortex-M3-M4.html */
 	NVIC_SetPriorityGrouping( 0 );
 
-	xQueue = xQueueCreate(100, sizeof(queue_msg));
+	xQueue = xQueueCreate(mainQUEUE_LENGTH, sizeof(queueMsg));
 
 	/* TODO: Setup the clocks, etc. here, if they were not configured before
 	main() was called. */
