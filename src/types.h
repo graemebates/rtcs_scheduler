@@ -21,18 +21,16 @@ typedef enum {
 } taskType;
 
 typedef struct {
+	char *name;
 	uint32_t deadline;
-	uint32_t execution_time;
 	taskType task_type;
 	void (*func)();
-	char *name;
 } createTaskParams;
 
 typedef struct {
 	TaskHandle_t handle;
 	char *name;
 	uint32_t deadline;
-	uint32_t execution_time;
 	uint32_t task_type;
 	uint32_t creation_time;
 } taskProps;
@@ -46,6 +44,7 @@ typedef struct {
 
 typedef struct {
 	TaskHandle_t t_handle;
+	char *name;
 	uint32_t deadline;
 	uint32_t task_type;
 	uint32_t creation_time;
@@ -55,6 +54,7 @@ typedef struct {
 
 typedef struct {
 	TaskHandle_t t_handle;
+	char *name;
 	uint32_t deadline;
 	uint32_t task_type;
 	uint32_t creation_time;

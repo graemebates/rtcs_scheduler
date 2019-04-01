@@ -156,8 +156,8 @@ uint32_t dd_return_overdue_list(overdueTasks**);
 
 /* The queue used by the queue send and queue receive tasks. */
 static xQueueHandle xQueue = NULL;
-static taskList xActiveTasks = NULL;
-static overdueTasks xOverdueTasks = NULL;
+static taskList xActiveTasks = {};
+static overdueTasks xOverdueTasks = {};
 
 /* The semaphore (in this case binary) that is used by the FreeRTOS tick hook
  * function and the event semaphore task.
@@ -210,23 +210,34 @@ xTimerHandle xExampleSoftwareTimer = NULL;
 
 
 void dd_scheduler(void *pvParameters) {
+
 	void insert(taskProps task) {
 		taskList currTask = xActiveTasks;
-		if (currTask == NULL) {
-			xActiveTasks = task;
+		if (currTask.t_handle == NULL) {
+			xActiveTasks.t_handle		= task.handle;
+			xActiveTasks.deadline 		= task.deadline;
+			xActiveTasks.task_type 		= task.task_type;
+			xActiveTasks.creation_time 	= task.creation_time;
 		} else {
-			while (currTask.t_handle !== task.handle) {
-
+			while (currTask.next_cell != NULL) {
+				currTask = currTask.next_cell;
 			}
+			taskList newTask =
 		}
+
 		return;
 	}
 
-	void delete(taskProps task) {
-		if (xActiveTasks == NULL) {
+	void delete(TaskHandle_t handle) {
+		if (xActiveTasks.t_handle == NULL) {
 			// Something went wrong
 		} else {
+			while (currTask.t_handle != NULL) {
+				if (currTask.t_handle == handle) {
 
+				}
+				currTask = currTask.next_cell;
+			}
 		}
 		return;
 	}
@@ -237,7 +248,7 @@ void dd_scheduler(void *pvParameters) {
 
 		switch(msg.msg_type) {
 		case CREATE:
-			insert(msg.task_props.handle);
+			insert(msg.task_props);
 			xQueueSend(msg.cb_queue, "y", portMAX_DELAY);
 			break;
 		case DELETE:
@@ -269,14 +280,14 @@ TaskHandle_t dd_tcreate (createTaskParams create_task_params){
 	// Build message for global queue
 	queueMsg msg = {
 			.cb_queue = cb_queue,
-			.taskProps = {
-					handle = create_task_params.task_props.handle,
-					deadline = create_task_params.task_props.deadline,
-					execution_time = create_task_params.execution_time,
-					task_type = create_task_params.task_type,
-					creation_time = xTaskGetTickCount()
+			.task_props = {
+					.handle = xHandle,
+					.name = create_task_params.name,
+					.deadline = create_task_params.deadline,
+					.task_type = create_task_params.task_type,
+					.creation_time = xTaskGetTickCount()
 			},
-			.type = DELETE;
+			.msg_type = CREATE
 	};
 
 	// Put message on global queue
@@ -297,11 +308,14 @@ uint32_t dd_delete(TaskHandle_t t_handle){
 	// Build message for global queue
 	queueMsg msg = {
 			.cb_queue = cb_queue,
-			.taskProps = {
-					handle: t_handle,
-
-			};
-			.type = DELETE
+			.task_props = {
+					.handle = t_handle,
+					.name = NULL,
+					.deadline = NULL,
+					.task_type = NULL,
+					.creation_time = NULL
+			},
+			.msg_type = DELETE
 	};
 
 	// Put message on global queue
