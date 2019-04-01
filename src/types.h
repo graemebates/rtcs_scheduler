@@ -43,7 +43,7 @@ typedef struct {
 
 
 typedef struct {
-	TaskHandle_t t_handle;
+	TaskHandle_t handle;
 	char *name;
 	uint32_t deadline;
 	uint32_t task_type;
@@ -53,7 +53,7 @@ typedef struct {
 } taskList;
 
 typedef struct {
-	TaskHandle_t t_handle;
+	TaskHandle_t handle;
 	char *name;
 	uint32_t deadline;
 	uint32_t task_type;

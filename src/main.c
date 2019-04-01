@@ -157,6 +157,7 @@ uint32_t dd_return_overdue_list(overdueTasks**);
 /* The queue used by the queue send and queue receive tasks. */
 static xQueueHandle xQueue = NULL;
 static taskList xActiveTasks = {};
+static taskList *pActiveTasks = NULL;
 static overdueTasks xOverdueTasks = {};
 
 /* The semaphore (in this case binary) that is used by the FreeRTOS tick hook
@@ -212,17 +213,40 @@ xTimerHandle xExampleSoftwareTimer = NULL;
 void dd_scheduler(void *pvParameters) {
 
 	void insert(taskProps task) {
-		taskList currTask = xActiveTasks;
-		if (currTask.t_handle == NULL) {
-			xActiveTasks.t_handle		= task.handle;
-			xActiveTasks.deadline 		= task.deadline;
-			xActiveTasks.task_type 		= task.task_type;
-			xActiveTasks.creation_time 	= task.creation_time;
+		// If there are no active tasks queued
+		if (pActiveTasks == NULL) {
+			pActiveTasks->t_handle		= task.handle;
+			pActiveTasks->name			= task.name;
+			pActiveTasks->deadline 		= task.deadline;
+			pActiveTasks->task_type 	= task.task_type;
+			pActiveTasks->creation_time = task.creation_time;
 		} else {
-			while (currTask.next_cell != NULL) {
-				currTask = currTask.next_cell;
+		// Insert new task
+			taskList *currTask = xActiveTasks;
+			// Search for first task with deadline greater than inserted task
+			while (currTask->next_cell != NULL) {
+				currTask = currTask->next_cell;
+				if (task.create_time + task.deadline < currTask->create_time + currTask->deadline) {
+					break;
+				}
 			}
-			taskList newTask =
+
+			// Create cell for task
+			taskList task_cell = {
+				.handle = task.handle,
+				.name = task.name,
+				.deadline = task.deadline,
+				.task_type = task.task_type,
+				.creation_time = task.creation_time,
+				.next_cell = currTask,
+				.prev_cell = currTask->prev_cell
+			};
+
+			// If currTask is on first task in list (prev cell doesn't exist)
+			if (currTask->prev_cell != NULL) {
+				currTask->prev_cell->next_cell = task_cell;
+			}
+			currTask->next_cell = task_cell
 		}
 
 		return;
