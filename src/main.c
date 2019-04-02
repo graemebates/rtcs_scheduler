@@ -73,56 +73,145 @@ converted to ticks using the portTICK_RATE_MS constant. */
 #define red_led		LED5
 #define blue_led	LED6
 
+#define TASK1_EXEC 195
+#define TASK1_PERIOD 1500
+#define TASK2_EXEC 150
+#define TASK2_PERIOD 1500
+#define TASK3_EXEC 250
+#define TASK3_PERIOD 1750
 
+//void green_light(){
+//	STM_EVAL_LEDOn(green_led);
+//	uint32_t start_time = xTaskGetTickCount();
+//	while (xTaskGetTickCount() < start_time+10000){}
+//	STM_EVAL_LEDOff(green_led);
+//
+//	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+//	dd_delete(currentTaskHandle);
+//}
+//
+//void red_light(){
+//	STM_EVAL_LEDOn(red_led);
+//	uint32_t start_time = xTaskGetTickCount();
+//	while (xTaskGetTickCount() < start_time+1000){}
+//	STM_EVAL_LEDOff(red_led);
+//
+//	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+//	dd_delete(currentTaskHandle);
+//}
 
-void green_light(){
+void task1() {
+	STM_EVAL_LEDOn(red_led);
 
-	STM_EVAL_LEDOn(green_led);
 	uint32_t start_time = xTaskGetTickCount();
-	while (xTaskGetTickCount() < start_time+10000){}
+	while ( xTaskGetTickCount() < start_time+TASK1_EXEC ) {}
+
+	STM_EVAL_LEDOff(red_led);
+
+	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+	dd_delete(currentTaskHandle);
+}
+
+void task2() {
+	STM_EVAL_LEDOn(green_led);
+
+	uint32_t start_time = xTaskGetTickCount();
+	while ( xTaskGetTickCount() < start_time+TASK2_EXEC ) {}
+
 	STM_EVAL_LEDOff(green_led);
 
 	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
 	dd_delete(currentTaskHandle);
 }
 
-void red_light(){
-	STM_EVAL_LEDOn(red_led);
+void task3() {
+	STM_EVAL_LEDOn(blue_led);
+
 	uint32_t start_time = xTaskGetTickCount();
-	while (xTaskGetTickCount() < start_time+1000){}
-	STM_EVAL_LEDOff(red_led);
+	while ( xTaskGetTickCount() < start_time+TASK3_EXEC ) {}
+
+	STM_EVAL_LEDOff(blue_led);
+
 	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
 	dd_delete(currentTaskHandle);
 }
 
-void gen(){
+void task1timer() {
 	createTaskParams taskParams = {
-				.name = "greenLight",
-				.deadline = 1000,
-				.task_type = APERIODIC,
-				.func = &green_light
-		};
-
+		.name = "task1",
+		.deadline = TASK1_PERIOD,
+		.task_type = PERIODIC,
+		.func = &task1
+	};
 	dd_tcreate(taskParams);
-	dd_return_active_list();
+}
 
-//	createTaskParams taskParams2 = {
-//				.name = "redLight",
-//				.deadline = 20,
-//				.task_type = APERIODIC,
-//				.func = &red_light
-//		};
-//	dd_tcreate(taskParams2);
-	taskNames *task_names = dd_return_overdue_list();
+void task2timer() {
+	createTaskParams taskParams = {
+		.name = "task2",
+		.deadline = TASK2_PERIOD,
+		.task_type = PERIODIC,
+		.func = &task2
+	};
+	dd_tcreate(taskParams);
+}
+
+void task3timer() {
+	createTaskParams taskParams = {
+		.name = "task3",
+		.deadline = TASK3_PERIOD,
+		.task_type = PERIODIC,
+		.func = &task3
+	};
+	dd_tcreate(taskParams);
+}
+
+void periodicGenerator() {
+	xTimerHandle xPeriodicGenTimer1 = NULL;
+	xTimerHandle xPeriodicGenTimer2 = NULL;
+	xTimerHandle xPeriodicGenTimer3 = NULL;
+
+	/* Test Bench #1 */
+	xPeriodicGenTimer1 = xTimerCreate("Task 1", TASK1_PERIOD, pdTRUE, ( void * ) 0, task1timer);
+	xPeriodicGenTimer2 = xTimerCreate("Task 2", TASK2_PERIOD, pdTRUE, ( void * ) 0, task2timer);
+	xPeriodicGenTimer3 = xTimerCreate("Task 3", TASK3_PERIOD, pdTRUE, ( void * ) 0, task3timer);
+
+	task1timer();
+	task2timer();
+	task3timer();
+
+	xTimerStart(xPeriodicGenTimer1, 0);
+	xTimerStart(xPeriodicGenTimer2, 0);
+	xTimerStart(xPeriodicGenTimer3, 0);
 
 	vTaskDelete( NULL );
-
-
 }
+
+//void gen(){
+//	createTaskParams taskParams = {
+//				.name = "greenLight",
+//				.deadline = 1000,
+//				.task_type = APERIODIC,
+//				.func = &green_light
+//		};
+//
+//	dd_tcreate(taskParams);
+//	dd_return_active_list();
+//
+////	createTaskParams taskParams2 = {
+////				.name = "redLight",
+////				.deadline = 20,
+////				.task_type = APERIODIC,
+////				.func = &red_light
+////		};
+////	dd_tcreate(taskParams2);
+//	taskNames *task_names = dd_return_overdue_list();
+//
+//	vTaskDelete( NULL );
+//}
 
 int main(void)
 {
-	xTimerHandle xExampleSoftwareTimer = NULL;
 	// Init leds
 	STM_EVAL_LEDInit(amber_led);
 	STM_EVAL_LEDInit(green_led);
@@ -172,9 +261,17 @@ int main(void)
 
 	/* Start the tasks and timer running. */
 
+//	xReturned = xTaskCreate(
+//							gen,				/* The function that implements the task. */
+//							"gen", 				/* Text name for the task, just to help debugging. */
+//							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
+//							NULL, 							/* A parameter that can be passed into the task. */
+//							3,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
+//							NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
+
 	xReturned = xTaskCreate(
-							gen,				/* The function that implements the task. */
-							"gen", 				/* Text name for the task, just to help debugging. */
+							periodicGenerator,				/* The function that implements the task. */
+							"periodicGenerator", 				/* Text name for the task, just to help debugging. */
 							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
 							NULL, 							/* A parameter that can be passed into the task. */
 							3,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
@@ -232,7 +329,7 @@ void insert(taskProps task) {
 		}
 
 		// If inserting task should go after currTask (when only one task is in list)
-		if (task.creation_time + task.deadline > currTask->creation_time + currTask->deadline) {
+		if (task.creation_time + task.deadline >= currTask->creation_time + currTask->deadline) {
 			pTask->next_cell = currTask->next_cell;
 			pTask->previous_cell = currTask;
 			currTask->next_cell = pTask;

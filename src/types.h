@@ -67,5 +67,9 @@ typedef struct taskNames {
 	struct taskNames *next_cell;
 } taskNames;
 
+typedef struct generatorParams {
+	uint32_t period;
+	void (*func)();
+};
 
 #endif /* TYPES_H_ */
