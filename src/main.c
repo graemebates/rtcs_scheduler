@@ -324,15 +324,15 @@ void insert(taskProps task) {
 				currTask->next_cell = pTask;
 			} else {
 				pTask->next_cell = currTask;
-				pTask->previous_cell = currTask->previous_cell;
-			}
 
-			// If currTask is on first task in list (prev cell doesn't exist)
-			if (currTask->previous_cell != NULL) {
-				currTask->previous_cell->next_cell = pTask;
+				// If currTask is on first task in list (prev cell doesn't exist)
+				if (currTask->previous_cell != NULL) {
+					pTask->previous_cell = currTask->previous_cell;
+					currTask->previous_cell->next_cell = pTask;
+				}
+				currTask->previous_cell = pTask;
+				pActiveTasks = pTask;
 			}
-
-			currTask->previous_cell = pTask;
 		}
 
 		return;
