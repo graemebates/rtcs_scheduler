@@ -94,8 +94,7 @@ The tick hook function executes in the context of the FreeRTOS tick interrupt.
 The function 'gives' a semaphore every 500th time it executes.  The semaphore
 is used to synchronise with the event semaphore task, which is described next.
 
-The event semaphore task:
-The event semaphore task uses the FreeRTOS xSemaphoreTake() API function to
+ The event semaphore task:heap
 wait for the semaphore that is given by the RTOS tick hook function.  The task
 increments the ulCountOfReceivedSemaphores variable each time the semaphore is
 received.  As the semaphore is given every 500ms (assuming a tick frequency of
@@ -215,20 +214,20 @@ void dd_scheduler(void *pvParameters) {
 	void insert(taskProps task) {
 		// If there are no active tasks queued
 		if (pActiveTasks == NULL) {
-			pActiveTasks->t_handle		= task.handle;
+			pActiveTasks->handle		= task.handle;
 			pActiveTasks->name			= task.name;
 			pActiveTasks->deadline 		= task.deadline;
 			pActiveTasks->task_type 	= task.task_type;
 			pActiveTasks->creation_time = task.creation_time;
 		} else {
 		// Insert new task
-			taskList *currTask = xActiveTasks;
+			taskList* currTask = pActiveTasks;
 			// Search for first task with deadline greater than inserted task
 			while (currTask->next_cell != NULL) {
-				currTask = currTask->next_cell;
-				if (task.create_time + task.deadline < currTask->create_time + currTask->deadline) {
+				if (task.creation_time + task.deadline < currTask->creation_time + currTask->deadline) {
 					break;
 				}
+				currTask = currTask->next_cell;
 			}
 
 			// Create cell for task
@@ -239,28 +238,36 @@ void dd_scheduler(void *pvParameters) {
 				.task_type = task.task_type,
 				.creation_time = task.creation_time,
 				.next_cell = currTask,
-				.prev_cell = currTask->prev_cell
+				.previous_cell = currTask->previous_cell
 			};
 
 			// If currTask is on first task in list (prev cell doesn't exist)
-			if (currTask->prev_cell != NULL) {
-				currTask->prev_cell->next_cell = task_cell;
+			if (currTask->previous_cell != NULL) {
+				currTask->previous_cell->next_cell = &task_cell;
 			}
-			currTask->next_cell = task_cell
+
+			currTask->previous_cell = &task_cell;
 		}
 
 		return;
 	}
 
 	void delete(TaskHandle_t handle) {
-		if (xActiveTasks.t_handle == NULL) {
+		if (pActiveTasks == NULL) {
 			// Something went wrong
 		} else {
-			while (currTask.t_handle != NULL) {
-				if (currTask.t_handle == handle) {
+			taskList* currTask = pActiveTasks;
+			// Search for task using handle
+			while (currTask != NULL) {
+				if (currTask->handle == handle) {
+					// Delete the task
 
+					// If it is the only
+//					if (currTaskb->previous_cell == NULL){
+//						noop;
+//					}
 				}
-				currTask = currTask.next_cell;
+				currTask = currTask->next_cell;
 			}
 		}
 		return;
@@ -286,18 +293,19 @@ void dd_scheduler(void *pvParameters) {
 		case OVERDUE:
 			break;
 		}
+		purgeAndRun();
 	}
 }
 
 TaskHandle_t dd_tcreate (createTaskParams create_task_params){
-
-	TaskHandle_t xHandle = xTaskCreate(
+	TaskHandle_t xHandle = NULL;
+	BaseType_t xReturned = xTaskCreate(
 							create_task_params.func,				/* The function that implements the task. */
 							create_task_params.name, 				/* Text name for the task, just to help debugging. */
 							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
 							NULL, 							/* A parameter that can be passed into the task. */
 							mainMIN_TASK_PRIORITY,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
-							NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
+							&xHandle );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
 
 	// Create callback queue for backwards communication
 	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
@@ -321,6 +329,7 @@ TaskHandle_t dd_tcreate (createTaskParams create_task_params){
 	xQueueReceive(cb_queue, NULL, portMAX_DELAY);
 	// Delete callback queue
 	vQueueDelete(cb_queue);
+
 
 	return xHandle;
 }

@@ -21,23 +21,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
   8 .ARM.attributes 0000002e  00000000  00000000  00020018  2**0
                   CONTENTS, READONLY
-  9 .debug_info   0000a465  00000000  00000000  00020046  2**0
+  9 .debug_info   0000a57d  00000000  00000000  00020046  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_abbrev 00001ab2  00000000  00000000  0002a4ab  2**0
+ 10 .debug_abbrev 00001a93  00000000  00000000  0002a5c3  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_aranges 00000908  00000000  00000000  0002bf60  2**3
+ 11 .debug_aranges 00000908  00000000  00000000  0002c058  2**3
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000820  00000000  00000000  0002c868  2**3
+ 12 .debug_ranges 00000820  00000000  00000000  0002c960  2**3
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_line   000044ea  00000000  00000000  0002d088  2**0
+ 13 .debug_line   0000453a  00000000  00000000  0002d180  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_str    000038af  00000000  00000000  00031572  2**0
+ 14 .debug_str    00003922  00000000  00000000  000316ba  2**0
                   CONTENTS, READONLY, DEBUGGING
- 15 .comment      0000007c  00000000  00000000  00034e21  2**0
+ 15 .comment      0000007c  00000000  00000000  00034fdc  2**0
                   CONTENTS, READONLY
- 16 .debug_frame  000023b8  00000000  00000000  00034ea0  2**2
+ 16 .debug_frame  000023c0  00000000  00000000  00035058  2**2
                   CONTENTS, READONLY, DEBUGGING
- 17 .stabstr      0000003f  00000000  00000000  00037258  2**0
+ 17 .stabstr      0000003f  00000000  00000000  00037418  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -7860,8 +7860,8 @@ static __INLINE void NVIC_SetPriorityGrouping(uint32_t PriorityGroup)
  8002af8:	e000ed00 	.word	0xe000ed00
 
 08002afc <main>:
-uint32_t dd_return_active_list(taskList**);
-uint32_t dd_return_overdue_list(overdueTasks**);
+static xSemaphoreHandle xEventSemaphore = NULL;
+
 /*-----------------------------------------------------------*/
 
 int main(void)
@@ -8098,7 +8098,7 @@ static void prvSetupHardware( void )
 
 	xQueue = xQueueCreate(mainQUEUE_LENGTH, sizeof(queueMsg));
  8002bfe:	2200      	movs	r2, #0
- 8002c00:	210c      	movs	r1, #12
+ 8002c00:	211c      	movs	r1, #28
  8002c02:	2064      	movs	r0, #100	; 0x64
  8002c04:	f7fd fe84 	bl	8000910 <xQueueGenericCreate>
  8002c08:	4602      	mov	r2, r0

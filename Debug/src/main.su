@@ -1,0 +1,14 @@
+core_cm4.h:1037:22:NVIC_SetPriorityGrouping	24	static
+main.c:169:5:main	24	static
+main.c:214:7:insert	48	static
+main.c:212:6:dd_scheduler	64	static
+main.c:255:7:delete	24	static
+main.c:300:14:dd_tcreate	80	static
+main.c:337:10:dd_delete	48	static
+main.c:365:10:dd_return_active_list	16	static
+main.c:369:10:dd_return_overdue_list	16	static
+main.c:374:6:vApplicationTickHook	16	static
+main.c:411:6:vApplicationMallocFailedHook	4	static
+main.c:425:6:vApplicationStackOverflowHook	16	static
+main.c:439:6:vApplicationIdleHook	16	static
+main.c:461:13:prvSetupHardware	8	static

@@ -1947,16 +1947,22 @@ Discarded input sections
  .text          0x00000000        0x0 src\main.o
  .data          0x00000000        0x0 src\main.o
  .bss           0x00000000        0x0 src\main.o
- .text.insert.9052
-                0x00000000       0x18 src\main.o
+ .bss.xActiveTasks
+                0x00000000       0x1c src\main.o
+ .bss.pActiveTasks
+                0x00000000        0x4 src\main.o
+ .bss.xOverdueTasks
+                0x00000000       0x1c src\main.o
+ .text.insert.9062
+                0x00000000       0xc0 src\main.o
  .text.dd_scheduler
-                0x00000000       0x88 src\main.o
- .text.delete.9055
-                0x00000000       0x18 src\main.o
+                0x00000000       0x98 src\main.o
+ .text.delete.9070
+                0x00000000       0x3c src\main.o
  .text.dd_tcreate
-                0x00000000       0x70 src\main.o
+                0x00000000       0x88 src\main.o
  .text.dd_delete
-                0x00000000       0x54 src\main.o
+                0x00000000       0x64 src\main.o
  .text.dd_return_active_list
                 0x00000000       0x16 src\main.o
  .text.dd_return_overdue_list
@@ -2674,7 +2680,7 @@ LOAD c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../l
  .bss.xQueue    0x20001d84        0x4 src\main.o
  .bss.xEventSemaphore
                 0x20001d88        0x4 src\main.o
- .bss.ulCount.9089
+ .bss.ulCount.9109
                 0x20001d8c        0x4 src\main.o
  *(COMMON)
  COMMON         0x20001d90       0x40 FreeRTOS_Source\queue.o
@@ -2755,7 +2761,7 @@ LOAD c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../l
                 0x0000040d       0x22 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/armv7e-m/softfp/crtn.o
 OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
 
-.debug_info     0x00000000     0xa465
+.debug_info     0x00000000     0xa57d
  .debug_info    0x00000000      0xac3 FreeRTOS_Source\list.o
  .debug_info    0x00000ac3      0x50b FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_info    0x00000fce      0x9e9 FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2767,12 +2773,12 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_info    0x0000788b      0xb1a Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_info    0x000083a5     0x108b Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_info    0x00009430      0x12d src\STM32F4-Discovery_callback.o
- .debug_info    0x0000955d      0x773 src\main.o
- .debug_info    0x00009cd0       0xa4 src\startup_stm32f4xx.o
- .debug_info    0x00009d74      0x121 src\stm32f4xx_it.o
- .debug_info    0x00009e95      0x5d0 src\system_stm32f4xx.o
+ .debug_info    0x0000955d      0x88b src\main.o
+ .debug_info    0x00009de8       0xa4 src\startup_stm32f4xx.o
+ .debug_info    0x00009e8c      0x121 src\stm32f4xx_it.o
+ .debug_info    0x00009fad      0x5d0 src\system_stm32f4xx.o
 
-.debug_abbrev   0x00000000     0x1ab2
+.debug_abbrev   0x00000000     0x1a93
  .debug_abbrev  0x00000000      0x1c5 FreeRTOS_Source\list.o
  .debug_abbrev  0x000001c5      0x1d5 FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_abbrev  0x0000039a      0x245 FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2784,10 +2790,10 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_abbrev  0x00001196      0x17a Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_abbrev  0x00001310      0x276 Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_abbrev  0x00001586       0xa3 src\STM32F4-Discovery_callback.o
- .debug_abbrev  0x00001629      0x2a7 src\main.o
- .debug_abbrev  0x000018d0       0x12 src\startup_stm32f4xx.o
- .debug_abbrev  0x000018e2       0x78 src\stm32f4xx_it.o
- .debug_abbrev  0x0000195a      0x158 src\system_stm32f4xx.o
+ .debug_abbrev  0x00001629      0x288 src\main.o
+ .debug_abbrev  0x000018b1       0x12 src\startup_stm32f4xx.o
+ .debug_abbrev  0x000018c3       0x78 src\stm32f4xx_it.o
+ .debug_abbrev  0x0000193b      0x158 src\system_stm32f4xx.o
 
 .debug_aranges  0x00000000      0x908
  .debug_aranges
@@ -2838,7 +2844,7 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_ranges  0x000007c8       0x38 src\stm32f4xx_it.o
  .debug_ranges  0x00000800       0x20 src\system_stm32f4xx.o
 
-.debug_line     0x00000000     0x44ea
+.debug_line     0x00000000     0x453a
  .debug_line    0x00000000      0x31c FreeRTOS_Source\list.o
  .debug_line    0x0000031c      0x388 FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_line    0x000006a4      0x2f6 FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2850,12 +2856,12 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_line    0x00002f4b      0x46e Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_line    0x000033b9      0x70f Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_line    0x00003ac8      0x1c4 src\STM32F4-Discovery_callback.o
- .debug_line    0x00003c8c      0x3da src\main.o
- .debug_line    0x00004066       0x77 src\startup_stm32f4xx.o
- .debug_line    0x000040dd      0x1f4 src\stm32f4xx_it.o
- .debug_line    0x000042d1      0x219 src\system_stm32f4xx.o
+ .debug_line    0x00003c8c      0x42a src\main.o
+ .debug_line    0x000040b6       0x77 src\startup_stm32f4xx.o
+ .debug_line    0x0000412d      0x1f4 src\stm32f4xx_it.o
+ .debug_line    0x00004321      0x219 src\system_stm32f4xx.o
 
-.debug_str      0x00000000     0x38af
+.debug_str      0x00000000     0x3922
  .debug_str     0x00000000      0x6ea FreeRTOS_Source\list.o
                                 0x76f (size before relaxing)
  .debug_str     0x000006ea      0x26d FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
@@ -2878,11 +2884,11 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
                                0x1119 (size before relaxing)
  .debug_str     0x00003493       0x84 src\STM32F4-Discovery_callback.o
                                 0x2a3 (size before relaxing)
- .debug_str     0x00003517      0x271 src\main.o
-                                0x57d (size before relaxing)
- .debug_str     0x00003788       0x7b src\stm32f4xx_it.o
+ .debug_str     0x00003517      0x2e4 src\main.o
+                                0x5f4 (size before relaxing)
+ .debug_str     0x000037fb       0x7b src\stm32f4xx_it.o
                                 0x279 (size before relaxing)
- .debug_str     0x00003803       0xac src\system_stm32f4xx.o
+ .debug_str     0x00003876       0xac src\system_stm32f4xx.o
                                 0x430 (size before relaxing)
 
 .comment        0x00000000       0x7c
@@ -2902,7 +2908,7 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .comment       0x0000007c       0x7d src\stm32f4xx_it.o
  .comment       0x0000007c       0x7d src\system_stm32f4xx.o
 
-.debug_frame    0x00000000     0x23b8
+.debug_frame    0x00000000     0x23c0
  .debug_frame   0x00000000       0xd8 FreeRTOS_Source\list.o
  .debug_frame   0x000000d8      0x19c FreeRTOS_Source\portable\GCC\ARM_CM4F\port.o
  .debug_frame   0x00000274       0x9c FreeRTOS_Source\portable\MemMang\heap_1.o
@@ -2914,12 +2920,12 @@ OUTPUT(STM32F4_Discovery_FreeRTOS_Simple_Demo.elf elf32-littlearm)
  .debug_frame   0x000016fc      0x3f4 Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_spi.o
  .debug_frame   0x00001af0      0x4bc Utilities\STM32F4-Discovery\stm32f4_discovery_audio_codec.o
  .debug_frame   0x00001fac       0x70 src\STM32F4-Discovery_callback.o
- .debug_frame   0x0000201c      0x1fc src\main.o
- .debug_frame   0x00002218       0xb0 src\stm32f4xx_it.o
- .debug_frame   0x000022c8       0x7c src\system_stm32f4xx.o
- .debug_frame   0x00002344       0x2c c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-init.o)
- .debug_frame   0x00002370       0x28 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memcpy-stub.o)
- .debug_frame   0x00002398       0x20 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memset.o)
+ .debug_frame   0x0000201c      0x204 src\main.o
+ .debug_frame   0x00002220       0xb0 src\stm32f4xx_it.o
+ .debug_frame   0x000022d0       0x7c src\system_stm32f4xx.o
+ .debug_frame   0x0000234c       0x2c c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-init.o)
+ .debug_frame   0x00002378       0x28 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memcpy-stub.o)
+ .debug_frame   0x000023a0       0x20 c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libc_nano.a(lib_a-memset.o)
 
 .stabstr        0x00000000       0x3f
  .stabstr       0x00000000       0x3f c:/program files (x86)/atollic/truestudio for stm32 9.1.0/armtools/bin/../lib/gcc/arm-atollic-eabi/6.3.1/../../../../arm-atollic-eabi/lib/armv7e-m/softfp\libnosys.a(write.o)
@@ -3839,6 +3845,7 @@ pcQueueGetName                                    FreeRTOS_Source\queue.o
 pcTaskGetName                                     FreeRTOS_Source\tasks.o
 pcTimerGetName                                    FreeRTOS_Source\timers.o
 printf                                            src\tiny_printf.o
+purgeAndRun                                       src\main.o
 pvPortMalloc                                      FreeRTOS_Source\portable\MemMang\heap_1.o
                                                   FreeRTOS_Source\timers.o
                                                   FreeRTOS_Source\tasks.o
