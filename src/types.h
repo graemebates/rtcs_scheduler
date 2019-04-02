@@ -36,7 +36,7 @@ typedef struct {
 } taskProps;
 
 typedef struct {
-	xQueueHandle *cb_queue;
+	xQueueHandle cb_queue;
 	taskProps task_props;
 	msgType msg_type;
 } queueMsg;

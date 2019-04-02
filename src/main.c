@@ -191,7 +191,9 @@ void green_light(){
 	uint32_t start_time = xTaskGetTickCount();
 	while (xTaskGetTickCount() < start_time+1000){}
 	STM_EVAL_LEDOff(green_led);
-	vTaskDelete(NULL);
+
+	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+	dd_delete(currentTaskHandle);
 }
 
 void red_light(){
@@ -199,7 +201,8 @@ void red_light(){
 	uint32_t start_time = xTaskGetTickCount();
 	while (xTaskGetTickCount() < start_time+1000){}
 	STM_EVAL_LEDOff(red_led);
-	vTaskDelete(NULL);
+	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+	dd_delete(currentTaskHandle);
 }
 
 void gen(){
@@ -209,7 +212,8 @@ void gen(){
 				.task_type = APERIODIC,
 				.func = &green_light
 		};
-	dd_tcreate(taskParams);
+
+	TaskHandle_t createdHandle = dd_tcreate(taskParams);
 
 	createTaskParams taskParams2 = {
 				.name = "redLight",
@@ -418,11 +422,11 @@ void dd_scheduler(void *pvParameters) {
 		switch(msg.msg_type) {
 		case CREATE:
 			insert(msg.task_props);
-			xQueueSend(*msg.cb_queue, "y", portMAX_DELAY);
+			xQueueSend(msg.cb_queue, "y", portMAX_DELAY);
 			break;
 		case DELETE:
 			delete(msg.task_props.handle);
-			xQueueSend(*msg.cb_queue, "y", portMAX_DELAY);
+			xQueueSend(msg.cb_queue, "y", portMAX_DELAY);
 			break;
 		case ACTIVE:
 			//listActive();
@@ -446,16 +450,14 @@ TaskHandle_t dd_tcreate (createTaskParams create_task_params){
 							&xHandle );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
 
 	// Create callback queue for backwards communication
-	xQueueHandle *p_cb_queue = pvPortMalloc(sizeof(xQueueHandle));
-	*p_cb_queue = xQueueCreate(1, sizeof(char));
-	vQueueAddToRegistry( *p_cb_queue, "task cb queue" );
+	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
 
 	// Build message for global queue
 	uint32_t time = xTaskGetTickCount();
 	vTaskDelay(100);
 	time = xTaskGetTickCount();
 	queueMsg msg = {
-			.cb_queue = p_cb_queue,
+			.cb_queue = cb_queue,
 			.task_props = {
 					.handle = xHandle,
 					.name = create_task_params.name,
@@ -471,10 +473,10 @@ TaskHandle_t dd_tcreate (createTaskParams create_task_params){
 
 	// Wait on receiver to call callback queue
 	char res = 0;
-	xQueueReceive(*p_cb_queue, &res, portMAX_DELAY);
+	xQueueReceive(cb_queue, &res, portMAX_DELAY);
 
 	// Delete callback queue
-	vQueueDelete(*p_cb_queue);
+	vQueueDelete(cb_queue);
 
 
 	return xHandle;
@@ -483,12 +485,11 @@ TaskHandle_t dd_tcreate (createTaskParams create_task_params){
 uint32_t dd_delete(TaskHandle_t t_handle){
 
 	// Create callback queue for backwards communication
-	xQueueHandle *p_cb_queue = pvPortMalloc(sizeof(xQueueHandle));
-	*p_cb_queue = xQueueCreate(1, sizeof(char));
+	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
 
 	// Build message for global queue
 	queueMsg msg = {
-			.cb_queue = p_cb_queue,
+			.cb_queue = cb_queue,
 			.task_props = {
 					.handle = t_handle,
 					.name = NULL,
@@ -504,9 +505,12 @@ uint32_t dd_delete(TaskHandle_t t_handle){
 
 	// Wait on receiver to call callback queue
 	char res = 0;
-	xQueueReceive(*p_cb_queue, &res, portMAX_DELAY);
+	xQueueReceive(cb_queue, &res, portMAX_DELAY);
 	// Delete callback queue
-	vQueueDelete(*p_cb_queue);
+	vQueueDelete(cb_queue);
+
+	// Delete task
+	vTaskDelete(t_handle);
 
 	return 0;
 }
