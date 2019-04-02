@@ -7,8 +7,7 @@ main.c:300:14:dd_tcreate	80	static
 main.c:337:10:dd_delete	48	static
 main.c:365:10:dd_return_active_list	16	static
 main.c:369:10:dd_return_overdue_list	16	static
-main.c:374:6:vApplicationTickHook	16	static
-main.c:411:6:vApplicationMallocFailedHook	4	static
-main.c:425:6:vApplicationStackOverflowHook	16	static
-main.c:439:6:vApplicationIdleHook	16	static
-main.c:461:13:prvSetupHardware	8	static
+main.c:376:6:vApplicationMallocFailedHook	4	static
+main.c:390:6:vApplicationStackOverflowHook	16	static
+main.c:404:6:vApplicationIdleHook	16	static
+main.c:426:13:prvSetupHardware	8	static
