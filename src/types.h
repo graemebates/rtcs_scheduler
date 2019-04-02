@@ -42,7 +42,7 @@ typedef struct {
 } queueMsg;
 
 
-typedef struct taskList{
+typedef struct taskList {
 	TaskHandle_t handle;
 	char *name;
 	uint32_t deadline;
@@ -52,7 +52,7 @@ typedef struct taskList{
 	struct taskList *previous_cell;
 } taskList;
 
-typedef struct overdueTasks{
+typedef struct overdueTasks {
 	TaskHandle_t handle;
 	char *name;
 	uint32_t deadline;
@@ -62,6 +62,10 @@ typedef struct overdueTasks{
 	struct overdueTasks *previous_cell;
 } overdueTasks;
 
+typedef struct taskNames {
+	char *name;
+	struct taskNames *next_cell;
+} taskNames;
 
 
 #endif /* TYPES_H_ */

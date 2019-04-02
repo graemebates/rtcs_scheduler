@@ -150,16 +150,14 @@ static void prvSetupHardware( void );
 void dd_scheduler(void *pvParameters);
 TaskHandle_t dd_tcreate(createTaskParams);
 uint32_t dd_delete(TaskHandle_t);
-uint32_t dd_return_active_list(taskList**);
-uint32_t dd_return_overdue_list(overdueTasks**);
+taskNames * dd_return_active_list();
+taskNames *dd_return_overdue_list(overdueTasks**);
 
 /*-----------------------------------------------------------*/
 
 /* The queue used by the queue send and queue receive tasks. */
 static xQueueHandle xQueue = NULL;
-static taskList xActiveTasks = {};
 static taskList *pActiveTasks = NULL;
-static overdueTasks xOverdueTasks = {};
 static overdueTasks *pOverdueTasks = NULL;
 /* The semaphore (in this case binary) that is used by the FreeRTOS tick hook
  * function and the event semaphore task.
@@ -222,7 +220,11 @@ void gen(){
 				.func = &red_light
 		};
 	dd_tcreate(taskParams2);
+	dd_return_active_list();
+
 	vTaskDelete( NULL );
+
+
 }
 
 int main(void)
@@ -301,6 +303,7 @@ void insert(taskProps task) {
 			.previous_cell = NULL
 		};
 
+		// Create space in memory for task
 		taskList *pTask = (taskList*)pvPortMalloc(sizeof(taskList));
 		*pTask = task_cell;
 
@@ -314,26 +317,33 @@ void insert(taskProps task) {
 			eTaskState taskState;
 			while (currTask->next_cell != NULL) {
 				taskState = eTaskGetState(currTask->handle);
+				// If task has been deleted, ignore
 				if (taskState == eDeleted) {
 
+				// If task should be inserted before current task
 				} else if (task.creation_time + task.deadline < currTask->creation_time + currTask->deadline) {
 					break;
 				}
+
+				// Otherwise continue iteration
 				currTask = currTask->next_cell;
 			}
 
+			// If inserting task should go after currTask (when only one task is in list)
 			if (task.creation_time + task.deadline > currTask->creation_time + currTask->deadline) {
 				pTask->next_cell = currTask->next_cell;
 				pTask->previous_cell = currTask;
 				currTask->next_cell = pTask;
+			// Otherwise task should go in front
 			} else {
-				pTask->next_cell = currTask;
 
 				// If currTask is on first task in list (prev cell doesn't exist)
 				if (currTask->previous_cell != NULL) {
 					pTask->previous_cell = currTask->previous_cell;
 					currTask->previous_cell->next_cell = pTask;
 				}
+
+				pTask->next_cell = currTask;
 				currTask->previous_cell = pTask;
 				pActiveTasks = pTask;
 			}
@@ -352,20 +362,21 @@ void insert(taskProps task) {
 				if (currTask->handle == handle) {
 					// Delete the task
 					vTaskDelete(handle);
-					// If it is the first/only task
-					if (currTask->previous_cell == NULL){
-						// Kill active task
 
+					// If it is the first/only task
+					if (currTask->previous_cell == NULL) {
+						// Move active tasks pointer to next one
+						pActiveTasks = currTask->next_cell;
+					// If there is a previous task
+					} else {
+						currTask->previous_cell->next_cell = currTask->next_cell;
 					}
-					// Move active tasks pointer to next one
-					pActiveTasks = currTask->next_cell;
 
 					// If there is a next task
 					if (currTask->next_cell != NULL) {
-						currTask->next_cell->previous_cell = NULL;
-
-						// TODO: Maybe start new active task?
+						currTask->next_cell->previous_cell = currTask->previous_cell;
 					}
+
 					break;
 				}
 
@@ -389,6 +400,22 @@ void insert(taskProps task) {
 
 			// If it is overdue
 			}else if (currTask->creation_time + currTask->deadline < xTaskGetTickCount()) {
+				overdueTasks *overdueTask = pvPortMalloc(sizeof(overdueTasks));
+				overdueTasks odtask = {
+						.handle = currTask->handle,
+						.name = currTask->name,
+						.deadline = currTask->deadline,
+						.task_type = currTask->task_type,
+						.creation_time = currTask->creation_time,
+						.next_cell = pOverdueTasks,
+						.previous_cell = NULL
+				};
+				*overdueTask = odtask;
+				if (pOverdueTasks != NULL) {
+					pOverdueTasks->previous_cell = overdueTask;
+				};
+				pOverdueTasks = overdueTask;
+
 				vTaskDelete(currTask->handle);
 				vPortFree(currTask);
 			}else{
@@ -515,11 +542,44 @@ uint32_t dd_delete(TaskHandle_t t_handle){
 	return 0;
 }
 
-uint32_t dd_return_active_list(taskList **list){
-	return 0;
+taskNames *dd_return_active_list(){
+	if (pActiveTasks == NULL) {
+		return NULL;
+	}
+
+	taskNames *head_task_names;
+	taskNames *prev_task_name;
+	taskList *curr_task = pActiveTasks;
+
+	taskNames temp_task_name = {
+		.name = curr_task->name,
+		.next_cell = NULL
+	};
+
+	taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
+	*task_name = temp_task_name;
+	head_task_names = task_name;
+	prev_task_name = task_name;
+	curr_task = curr_task->next_cell;
+
+	while (curr_task != NULL) {
+		taskNames temp_task_name = {
+			.name = curr_task->name,
+			.next_cell = NULL
+		};
+
+		taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
+		*task_name = temp_task_name;
+
+		prev_task_name->next_cell = task_name;
+		prev_task_name = task_name;
+		curr_task = curr_task->next_cell;
+	}
+
+	return head_task_names;
 }
 
-uint32_t dd_return_overdue_list(overdueTasks **list){
+taskNames *dd_return_overdue_list(overdueTasks **list){
 	return 0;
 }
 
