@@ -1,113 +1,3 @@
-/*
-    FreeRTOS V9.0.0 - Copyright (C) 2016 Real Time Engineers Ltd.
-    All rights reserved
-
-    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
-
-    This file is part of the FreeRTOS distribution.
-
-    FreeRTOS is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>>> AND MODIFIED BY <<<< the FreeRTOS exception.
-
-    ***************************************************************************
-    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
-    >>!   distribute a combined work that includes FreeRTOS without being   !<<
-    >>!   obliged to provide the source code for proprietary components     !<<
-    >>!   outside of the FreeRTOS kernel.                                   !<<
-    ***************************************************************************
-
-    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available on the following
-    link: http://www.freertos.org/a00114.html
-
-    ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that is more than just the market leader, it     *
-     *    is the industry's de facto standard.                               *
-     *                                                                       *
-     *    Help yourself get started quickly while simultaneously helping     *
-     *    to support the FreeRTOS project by purchasing a FreeRTOS           *
-     *    tutorial book, reference manual, or both:                          *
-     *    http://www.FreeRTOS.org/Documentation                              *
-     *                                                                       *
-    ***************************************************************************
-
-    http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
-    the FAQ page "My application does not run, what could be wrong?".  Have you
-    defined configASSERT()?
-
-    http://www.FreeRTOS.org/support - In return for receiving this top quality
-    embedded software for free we request you assist our global community by
-    participating in the support forum.
-
-    http://www.FreeRTOS.org/training - Investing in training allows your team to
-    be as productive as possible as early as possible.  Now you can receive
-    FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
-    Ltd, and the world's leading authority on the world's leading RTOS.
-
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
-    compatible FAT file system, and our tiny thread aware UDP/IP stack.
-
-    http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
-    Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
-
-    http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
-    Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and commercial middleware.
-
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
-    engineered and independently SIL3 certified version for use in safety and
-    mission critical applications that require provable dependability.
-
-    1 tab == 4 spaces!
-*/
-
-/*
-FreeRTOS is a market leading RTOS from Real Time Engineers Ltd. that supports
-31 architectures and receives 77500 downloads a year. It is professionally
-developed, strictly quality controlled, robust, supported, and free to use in
-commercial products without any requirement to expose your proprietary source
-code.
-
-This simple FreeRTOS demo does not make use of any IO ports, so will execute on
-any Cortex-M3 of Cortex-M4 hardware.  Look for TODO markers in the code for
-locations that may require tailoring to, for example, include a manufacturer
-specific header file.
-
-This is a starter project, so only a subset of the RTOS features are
-demonstrated.  Ample source comments are provided, along with web links to
-relevant pages on the http://www.FreeRTOS.org site.
-
-Here is a description of the project's functionality:
-
-The main() Function:
-main() creates the tasks and software timers described in this section, before
-starting the scheduler.
-
-The FreeRTOS RTOS tick hook (or callback) function:
-The tick hook function executes in the context of the FreeRTOS tick interrupt.
-The function 'gives' a semaphore every 500th time it executes.  The semaphore
-is used to synchronise with the event semaphore task, which is described next.
-
- The event semaphore task:heap
-wait for the semaphore that is given by the RTOS tick hook function.  The task
-increments the ulCountOfReceivedSemaphores variable each time the semaphore is
-received.  As the semaphore is given every 500ms (assuming a tick frequency of
-1KHz), the value of ulCountOfReceivedSemaphores will increase by 2 each second.
-
-The idle hook (or callback) function:
-The idle hook function queries the amount of free FreeRTOS heap space available.
-See vApplicationIdleHook().
-
-The malloc failed and stack overflow hook (or callback) functions:
-These two hook functions are provided as examples, but do not contain any
-functionality.
-*/
 
 /* Standard includes. */
 #include <stdint.h>
@@ -150,8 +40,9 @@ static void prvSetupHardware( void );
 void dd_scheduler(void *pvParameters);
 TaskHandle_t dd_tcreate(createTaskParams);
 uint32_t dd_delete(TaskHandle_t);
-taskNames * dd_return_active_list();
-taskNames *dd_return_overdue_list(overdueTasks**);
+taskNames *dd_return_active_list();
+taskNames *dd_return_overdue_list();
+void purgeAndRun(void);
 
 /*-----------------------------------------------------------*/
 
@@ -159,6 +50,7 @@ taskNames *dd_return_overdue_list(overdueTasks**);
 static xQueueHandle xQueue = NULL;
 static taskList *pActiveTasks = NULL;
 static overdueTasks *pOverdueTasks = NULL;
+static xTimerHandle xExpirationTimer = NULL;
 /* The semaphore (in this case binary) that is used by the FreeRTOS tick hook
  * function and the event semaphore task.
  */
@@ -187,7 +79,7 @@ void green_light(){
 
 	STM_EVAL_LEDOn(green_led);
 	uint32_t start_time = xTaskGetTickCount();
-	while (xTaskGetTickCount() < start_time+1000){}
+	while (xTaskGetTickCount() < start_time+10000){}
 	STM_EVAL_LEDOff(green_led);
 
 	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
@@ -206,21 +98,22 @@ void red_light(){
 void gen(){
 	createTaskParams taskParams = {
 				.name = "greenLight",
-				.deadline = 5000,
+				.deadline = 1000,
 				.task_type = APERIODIC,
 				.func = &green_light
 		};
 
-	TaskHandle_t createdHandle = dd_tcreate(taskParams);
-
-	createTaskParams taskParams2 = {
-				.name = "redLight",
-				.deadline = 2000,
-				.task_type = APERIODIC,
-				.func = &red_light
-		};
-	dd_tcreate(taskParams2);
+	dd_tcreate(taskParams);
 	dd_return_active_list();
+
+//	createTaskParams taskParams2 = {
+//				.name = "redLight",
+//				.deadline = 20,
+//				.task_type = APERIODIC,
+//				.func = &red_light
+//		};
+//	dd_tcreate(taskParams2);
+	taskNames *task_names = dd_return_overdue_list();
 
 	vTaskDelete( NULL );
 
@@ -238,6 +131,15 @@ int main(void)
 	/* Configure the system ready to run the demo.  The clock configuration
 	can be done here if it was not done before main() was called. */
 	prvSetupHardware();
+
+	xExpirationTimer = xTimerCreate("Expiration Timer", /* A text name, purely to help debugging. */
+		8192,											/* The timer period, in this case 1000ms (1s). */
+		pdFALSE,										/* This is not a periodic timer, so xAutoReload is set to pdTRUE. */
+		( void * ) 0,									/* The ID is not used, so can be set to anything. */
+		purgeAndRun										/* The callback function that changes the running task. */
+	);
+
+	xTimerStart( xExpirationTimer, 0 );
 
 
 	/* Create the queue used by the queue send and queue receive tasks.
@@ -292,156 +194,163 @@ int main(void)
 
 
 void insert(taskProps task) {
-		// Create cell for task
-		taskList task_cell = {
-			.handle = task.handle,
-			.name = task.name,
-			.deadline = task.deadline,
-			.task_type = task.task_type,
-			.creation_time = task.creation_time,
-			.next_cell = NULL,
-			.previous_cell = NULL
-		};
+	// Create cell for task
+	taskList task_cell = {
+		.handle = task.handle,
+		.name = task.name,
+		.deadline = task.deadline,
+		.task_type = task.task_type,
+		.creation_time = task.creation_time,
+		.next_cell = NULL,
+		.previous_cell = NULL
+	};
 
-		// Create space in memory for task
-		taskList *pTask = (taskList*)pvPortMalloc(sizeof(taskList));
-		*pTask = task_cell;
+	// Create space in memory for task
+	taskList *pTask = (taskList*)pvPortMalloc(sizeof(taskList));
+	*pTask = task_cell;
 
-		// If there are no active tasks queued
-		if (pActiveTasks == NULL) {
-			pActiveTasks = pTask;
-		} else {
-		// Insert new task
-			taskList* currTask = pActiveTasks;
-			// Search for first task with deadline greater than inserted task
-			eTaskState taskState;
-			while (currTask->next_cell != NULL) {
-				taskState = eTaskGetState(currTask->handle);
-				// If task has been deleted, ignore
-				if (taskState == eDeleted) {
-
-				// If task should be inserted before current task
-				} else if (task.creation_time + task.deadline < currTask->creation_time + currTask->deadline) {
-					break;
-				}
-
-				// Otherwise continue iteration
-				currTask = currTask->next_cell;
-			}
-
-			// If inserting task should go after currTask (when only one task is in list)
-			if (task.creation_time + task.deadline > currTask->creation_time + currTask->deadline) {
-				pTask->next_cell = currTask->next_cell;
-				pTask->previous_cell = currTask;
-				currTask->next_cell = pTask;
-			// Otherwise task should go in front
-			} else {
-
-				// If currTask is on first task in list (prev cell doesn't exist)
-				if (currTask->previous_cell != NULL) {
-					pTask->previous_cell = currTask->previous_cell;
-					currTask->previous_cell->next_cell = pTask;
-				}
-
-				pTask->next_cell = currTask;
-				currTask->previous_cell = pTask;
-				pActiveTasks = pTask;
-			}
-		}
-
-		return;
-	}
-
-	void delete(TaskHandle_t handle) {
-		if (pActiveTasks == NULL) {
-			// Something went wrong
-		} else {
-			taskList* currTask = pActiveTasks;
-			// Search for task using handle
-			while (currTask != NULL) {
-				if (currTask->handle == handle) {
-					// Delete the task
-					vTaskDelete(handle);
-
-					// If it is the first/only task
-					if (currTask->previous_cell == NULL) {
-						// Move active tasks pointer to next one
-						pActiveTasks = currTask->next_cell;
-					// If there is a previous task
-					} else {
-						currTask->previous_cell->next_cell = currTask->next_cell;
-					}
-
-					// If there is a next task
-					if (currTask->next_cell != NULL) {
-						currTask->next_cell->previous_cell = currTask->previous_cell;
-					}
-
-					break;
-				}
-
-				currTask = currTask->next_cell;
-			}
-		}
-		return;
-	}
-
-	void purgeAndRun() {
+	// If there are no active tasks queued
+	if (pActiveTasks == NULL) {
+		pActiveTasks = pTask;
+	} else {
+	// Insert new task
 		taskList* currTask = pActiveTasks;
-
-		eTaskState taskState = 0;
-
-
-		while (currTask != NULL) {
-			// If it has run
+		// Search for first task with deadline greater than inserted task
+		eTaskState taskState;
+		while (currTask->next_cell != NULL) {
 			taskState = eTaskGetState(currTask->handle);
+			// If task has been deleted, ignore
 			if (taskState == eDeleted) {
-				vPortFree(currTask);
 
-			// If it is overdue
-			}else if (currTask->creation_time + currTask->deadline < xTaskGetTickCount()) {
-				overdueTasks *overdueTask = pvPortMalloc(sizeof(overdueTasks));
-				overdueTasks odtask = {
-						.handle = currTask->handle,
-						.name = currTask->name,
-						.deadline = currTask->deadline,
-						.task_type = currTask->task_type,
-						.creation_time = currTask->creation_time,
-						.next_cell = pOverdueTasks,
-						.previous_cell = NULL
-				};
-				*overdueTask = odtask;
-				if (pOverdueTasks != NULL) {
-					pOverdueTasks->previous_cell = overdueTask;
-				};
-				pOverdueTasks = overdueTask;
-
-				vTaskDelete(currTask->handle);
-				vPortFree(currTask);
-			}else{
-				// Not overdue, not deleted. This is a valid task
-				currTask->previous_cell = NULL;
-				pActiveTasks = currTask;
+			// If task should be inserted before current task
+			} else if (task.creation_time + task.deadline < currTask->creation_time + currTask->deadline) {
 				break;
 			}
+
+			// Otherwise continue iteration
 			currTask = currTask->next_cell;
 		}
-		taskList* countTask = pActiveTasks;
-		int num_tasks = 0;
-		while (countTask != NULL){
-			countTask = countTask->next_cell;
-			num_tasks += 1;
-		}
 
-		for (int i = 0; i < num_tasks; i++) {
-			vTaskPrioritySet(currTask->handle, num_tasks-i+1);
+		// If inserting task should go after currTask (when only one task is in list)
+		if (task.creation_time + task.deadline > currTask->creation_time + currTask->deadline) {
+			pTask->next_cell = currTask->next_cell;
+			pTask->previous_cell = currTask;
+			currTask->next_cell = pTask;
+		// Otherwise task should go in front
+		} else {
+
+			// If currTask is on first task in list (prev cell doesn't exist)
+			if (currTask->previous_cell != NULL) {
+				pTask->previous_cell = currTask->previous_cell;
+				currTask->previous_cell->next_cell = pTask;
+			}
+
+			pTask->next_cell = currTask;
+			currTask->previous_cell = pTask;
+			pActiveTasks = pTask;
+		}
+	}
+
+	return;
+}
+
+void delete(TaskHandle_t handle) {
+	if (pActiveTasks == NULL) {
+		// Something went wrong
+	} else {
+		taskList* currTask = pActiveTasks;
+		// Search for task using handle
+		while (currTask != NULL) {
+			if (currTask->handle == handle) {
+				// Delete the task
+				vTaskDelete(handle);
+
+				// If it is the first/only task
+				if (currTask->previous_cell == NULL) {
+					// Move active tasks pointer to next one
+					pActiveTasks = currTask->next_cell;
+				// If there is a previous task
+				} else {
+					currTask->previous_cell->next_cell = currTask->next_cell;
+				}
+
+				// If there is a next task
+				if (currTask->next_cell != NULL) {
+					currTask->next_cell->previous_cell = currTask->previous_cell;
+				}
+
+				break;
+			}
+
 			currTask = currTask->next_cell;
 		}
 	}
+	return;
+}
+
+void purgeAndRun() {
+	taskList* currTask = pActiveTasks;
+	TickType_t time;
+
+	eTaskState taskState = 0;
+
+
+	while (currTask != NULL) {
+		// If it has run
+		taskState = eTaskGetState(currTask->handle);
+		if (taskState == eDeleted) {
+			vPortFree(currTask);
+
+		// If it is overdue
+		time = xTaskGetTickCount();
+		} else if (currTask->creation_time + currTask->deadline <= xTaskGetTickCount()) {
+			overdueTasks *overdueTask = pvPortMalloc(sizeof(overdueTasks));
+			overdueTasks odtask = {
+					.handle = currTask->handle,
+					.name = currTask->name,
+					.deadline = currTask->deadline,
+					.task_type = currTask->task_type,
+					.creation_time = currTask->creation_time,
+					.next_cell = pOverdueTasks,
+					.previous_cell = NULL
+			};
+			*overdueTask = odtask;
+			if (pOverdueTasks != NULL) {
+				pOverdueTasks->previous_cell = overdueTask;
+			};
+			pOverdueTasks = overdueTask;
+
+			vTaskDelete(currTask->handle);
+			vPortFree(currTask);
+		} else {
+			// Not overdue, not deleted. This is a valid task
+			currTask->previous_cell = NULL;
+			pActiveTasks = currTask;
+			break;
+		}
+		currTask = currTask->next_cell;
+	}
+	taskList* countTask = pActiveTasks;
+	int num_tasks = 0;
+	while (countTask != NULL){
+		countTask = countTask->next_cell;
+		num_tasks += 1;
+	}
+
+	for (int i = 0; i < num_tasks; i++) {
+		vTaskPrioritySet(currTask->handle, num_tasks-i+1);
+		currTask = currTask->next_cell;
+	}
+
+	if (pActiveTasks != NULL) {
+		xTimerChangePeriod(
+				xExpirationTimer,
+				pActiveTasks->deadline + pActiveTasks->creation_time - xTaskGetTickCount(),
+				0);
+	}
+}
+
 void dd_scheduler(void *pvParameters) {
-
-
-
 	queueMsg msg;
 	while (1) {
 		xQueueReceive( xQueue, &msg, portMAX_DELAY );
@@ -466,6 +375,7 @@ void dd_scheduler(void *pvParameters) {
 	}
 }
 
+
 TaskHandle_t dd_tcreate (createTaskParams create_task_params){
 	TaskHandle_t xHandle = NULL;
 	BaseType_t xReturned = xTaskCreate(
@@ -480,9 +390,6 @@ TaskHandle_t dd_tcreate (createTaskParams create_task_params){
 	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
 
 	// Build message for global queue
-	uint32_t time = xTaskGetTickCount();
-	vTaskDelay(100);
-	time = xTaskGetTickCount();
 	queueMsg msg = {
 			.cb_queue = cb_queue,
 			.task_props = {
@@ -579,8 +486,43 @@ taskNames *dd_return_active_list(){
 	return head_task_names;
 }
 
-taskNames *dd_return_overdue_list(overdueTasks **list){
-	return 0;
+taskNames *dd_return_overdue_list(){
+	if (pOverdueTasks == NULL) {
+		return NULL;
+	}
+
+	taskNames *head_task_names;
+	taskNames *prev_task_name;
+	taskList *curr_task = pOverdueTasks;
+
+	taskNames temp_task_name = {
+		.name = curr_task->name,
+		.next_cell = NULL
+	};
+
+	taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
+	*task_name = temp_task_name;
+	head_task_names = task_name;
+	prev_task_name = task_name;
+	curr_task = curr_task->next_cell;
+
+	while (curr_task != NULL) {
+		taskNames temp_task_name = {
+			.name = curr_task->name,
+			.next_cell = NULL
+		};
+
+		taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
+		*task_name = temp_task_name;
+
+		prev_task_name->next_cell = task_name;
+		prev_task_name = task_name;
+		curr_task = curr_task->next_cell;
+	}
+
+	pOverdueTasks = NULL;
+
+	return head_task_names;
 }
 
 void vApplicationTickHook( void )
