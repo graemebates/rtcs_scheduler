@@ -74,68 +74,74 @@ converted to ticks using the portTICK_RATE_MS constant. */
 #define blue_led	LED6
 
 #define TASK1_EXEC 195
-#define TASK1_PERIOD 1500
+#define TASK1_PERIOD 250
 #define TASK2_EXEC 150
-#define TASK2_PERIOD 1500
-#define TASK3_EXEC 250
-#define TASK3_PERIOD 1750
+#define TASK2_PERIOD 500
+#define TASK3_EXEC 350
+#define TASK3_PERIOD 750
+int xTicksCount = 0;
+int xTask1Count = 0;
+int xTask2Count = 0;
+int xTask3Count = 0;
+int xIdleCount = 0;
 
-//void green_light(){
-//	STM_EVAL_LEDOn(green_led);
-//	uint32_t start_time = xTaskGetTickCount();
-//	while (xTaskGetTickCount() < start_time+10000){}
-//	STM_EVAL_LEDOff(green_led);
-//
-//	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
-//	dd_delete(currentTaskHandle);
-//}
-//
-//void red_light(){
-//	STM_EVAL_LEDOn(red_led);
-//	uint32_t start_time = xTaskGetTickCount();
-//	while (xTaskGetTickCount() < start_time+1000){}
-//	STM_EVAL_LEDOff(red_led);
-//
-//	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
-//	dd_delete(currentTaskHandle);
-//}
-
+/* -------------------------------------- */
+/* ---------- Test Bench Tasks ---------- */
+/* -------------------------------------- */
 void task1() {
+
 	STM_EVAL_LEDOn(red_led);
 
 	uint32_t start_time = xTaskGetTickCount();
-	while ( xTaskGetTickCount() < start_time+TASK1_EXEC ) {}
+	while ( xTaskGetTickCount() < start_time+TASK1_EXEC ) {
+		xTask1Count += 1;
+	}
 
 	STM_EVAL_LEDOff(red_led);
 
 	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+
 	dd_delete(currentTaskHandle);
+
 }
 
 void task2() {
 	STM_EVAL_LEDOn(green_led);
 
 	uint32_t start_time = xTaskGetTickCount();
-	while ( xTaskGetTickCount() < start_time+TASK2_EXEC ) {}
+	while ( xTaskGetTickCount() < start_time+TASK2_EXEC ) {
+		xTask2Count += 1;
+	}
 
 	STM_EVAL_LEDOff(green_led);
 
 	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+
+
+
 	dd_delete(currentTaskHandle);
+
 }
 
 void task3() {
 	STM_EVAL_LEDOn(blue_led);
 
 	uint32_t start_time = xTaskGetTickCount();
-	while ( xTaskGetTickCount() < start_time+TASK3_EXEC ) {}
+	while ( xTaskGetTickCount() < start_time+TASK3_EXEC ) {
+		xTask3Count += 1;
+
+	}
 
 	STM_EVAL_LEDOff(blue_led);
 
 	TaskHandle_t currentTaskHandle = xTaskGetCurrentTaskHandle();
+
 	dd_delete(currentTaskHandle);
 }
 
+/* --------------------------------------- */
+/* ---------- Test Bench Timers ---------- */
+/* --------------------------------------- */
 void task1timer() {
 	createTaskParams taskParams = {
 		.name = "task1",
@@ -166,6 +172,7 @@ void task3timer() {
 	dd_tcreate(taskParams);
 }
 
+/* Auxilary Task Generator */
 void periodicGenerator() {
 	xTimerHandle xPeriodicGenTimer1 = NULL;
 	xTimerHandle xPeriodicGenTimer2 = NULL;
@@ -187,28 +194,47 @@ void periodicGenerator() {
 	vTaskDelete( NULL );
 }
 
-//void gen(){
-//	createTaskParams taskParams = {
-//				.name = "greenLight",
-//				.deadline = 1000,
-//				.task_type = APERIODIC,
-//				.func = &green_light
-//		};
-//
-//	dd_tcreate(taskParams);
-//	dd_return_active_list();
-//
-////	createTaskParams taskParams2 = {
-////				.name = "redLight",
-////				.deadline = 20,
-////				.task_type = APERIODIC,
-////				.func = &red_light
-////		};
-////	dd_tcreate(taskParams2);
-//	taskNames *task_names = dd_return_overdue_list();
-//
-//	vTaskDelete( NULL );
-//}
+void monitor() {
+	taskNames *task_name = NULL;
+
+	while (1) {
+
+		task_name = dd_return_active_list();
+		printf("\nActive Tasks: ");
+		while (task_name != NULL) {
+			printf(task_name->name);
+			printf(", ");
+			task_name = task_name->next_cell;
+		}
+
+		task_name = dd_return_overdue_list();
+		printf("\nOverdue Tasks: ");
+		while (task_name != NULL) {
+			printf(task_name->name);
+			printf(", ");
+			task_name = task_name->next_cell;
+		}
+		printf("\n");
+
+		printf("Time since last monitor(): %ims\n", xTaskGetTickCount() - xTicksCount);
+		int total = xTask1Count + xTask2Count + xTask3Count + xIdleCount;
+		int test = 100*xTask1Count/total;
+		printf("Task 1 Usage: %d%% \n", test);
+		printf("Task 2 Usage: %d%% \n", (100*xTask2Count/total));
+		printf("Task 3 Usage: %d%% \n", 100*xTask3Count/total);
+		printf("Idle Usage: %d%% \n", 100*xIdleCount/total);
+		xTicksCount = xTaskGetTickCount();
+		xTask1Count = 0;
+		xTask2Count = 0;
+		xTask3Count = 0;
+		xIdleCount = 0;
+
+		vTaskDelay(420);
+	}
+
+	vTaskDelete( NULL );
+}
+
 
 int main(void)
 {
@@ -220,14 +246,7 @@ int main(void)
 	/* Configure the system ready to run the demo.  The clock configuration
 	can be done here if it was not done before main() was called. */
 	prvSetupHardware();
-
-	xExpirationTimer = xTimerCreate("Expiration Timer", /* A text name, purely to help debugging. */
-		8192,											/* The timer period, in this case 1000ms (1s). */
-		pdFALSE,										/* This is not a periodic timer, so xAutoReload is set to pdTRUE. */
-		( void * ) 0,									/* The ID is not used, so can be set to anything. */
-		purgeAndRun										/* The callback function that changes the running task. */
-	);
-
+	xExpirationTimer = xTimerCreate("Expiration Timer", 8192, pdFALSE, ( void * ) 0, purgeAndRun);
 	xTimerStart( xExpirationTimer, 0 );
 
 
@@ -256,6 +275,14 @@ int main(void)
 							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
 							NULL, 							/* A parameter that can be passed into the task. */
 							4,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
+							NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
+
+	xReturned = xTaskCreate(
+							monitor,				/* The function that implements the task. */
+							"monitor", 				/* Text name for the task, just to help debugging. */
+							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
+							NULL, 							/* A parameter that can be passed into the task. */
+							3,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
 							NULL );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
 
 
@@ -395,12 +422,19 @@ void purgeAndRun() {
 	while (currTask != NULL) {
 		// If it has run
 		taskState = eTaskGetState(currTask->handle);
+		// If it is overdue
+		if (xTaskGetTickCount() < xTaskGetTickCountFromISR()) {
+			time = xTaskGetTickCount();
+		} else {
+			time = xTaskGetTickCount();
+		}
+
+		// If the task has been deleted
 		if (taskState == eDeleted) {
 			vPortFree(currTask);
-
-		// If it is overdue
-		time = xTaskGetTickCount();
-		} else if (currTask->creation_time + currTask->deadline <= xTaskGetTickCount()) {
+		// If the task has expired
+		} else if (currTask->creation_time + currTask->deadline <= time) {
+			// Allocate room for it
 			overdueTasks *overdueTask = pvPortMalloc(sizeof(overdueTasks));
 			overdueTasks odtask = {
 					.handle = currTask->handle,
@@ -411,12 +445,20 @@ void purgeAndRun() {
 					.next_cell = pOverdueTasks,
 					.previous_cell = NULL
 			};
+			// Set pointer content to new overdue task
 			*overdueTask = odtask;
+
+			// If task is empty
 			if (pOverdueTasks != NULL) {
 				pOverdueTasks->previous_cell = overdueTask;
 			};
 			pOverdueTasks = overdueTask;
 
+			// Adjust pointers
+			pActiveTasks = currTask->next_cell;
+			pActiveTasks->previous_cell = NULL;
+
+			// Delete task, free memory
 			vTaskDelete(currTask->handle);
 			vPortFree(currTask);
 		} else {
@@ -427,6 +469,7 @@ void purgeAndRun() {
 		}
 		currTask = currTask->next_cell;
 	}
+	// Start count of tasks in list
 	taskList* countTask = pActiveTasks;
 	int num_tasks = 0;
 	while (countTask != NULL){
@@ -434,18 +477,21 @@ void purgeAndRun() {
 		num_tasks += 1;
 	}
 
+	// Assign priorities
 	for (int i = 0; i < num_tasks; i++) {
 		vTaskPrioritySet(currTask->handle, num_tasks-i+1);
 		currTask = currTask->next_cell;
 	}
 
+	// If there is an active task, update expiration timer
 	if (pActiveTasks != NULL) {
 		xTimerChangePeriod(
 				xExpirationTimer,
-				pActiveTasks->deadline + pActiveTasks->creation_time - xTaskGetTickCount(),
+				pActiveTasks->deadline + pActiveTasks->creation_time - time,
 				0);
 	}
 }
+
 
 void dd_scheduler(void *pvParameters) {
 	queueMsg msg;
@@ -462,26 +508,25 @@ void dd_scheduler(void *pvParameters) {
 			xQueueSend(msg.cb_queue, "y", portMAX_DELAY);
 			break;
 		case ACTIVE:
-			//listActive();
-
+			// TODO: Do this
 			break;
 		case OVERDUE:
+			// TODO: Do this
 			break;
 		}
 		purgeAndRun();
 	}
 }
 
-
 TaskHandle_t dd_tcreate (createTaskParams create_task_params){
 	TaskHandle_t xHandle = NULL;
-	BaseType_t xReturned = xTaskCreate(
-							create_task_params.func,				/* The function that implements the task. */
-							create_task_params.name, 				/* Text name for the task, just to help debugging. */
-							configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
-							NULL, 							/* A parameter that can be passed into the task. */
-							mainMIN_TASK_PRIORITY,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
-							&xHandle );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
+	xTaskCreate(
+		create_task_params.func,				/* The function that implements the task. */
+		create_task_params.name, 				/* Text name for the task, just to help debugging. */
+		configMINIMAL_STACK_SIZE, 		/* The size (in words) of the stack that should be created for the task. */
+		NULL, 							/* A parameter that can be passed into the task. */
+		mainMIN_TASK_PRIORITY,			/* The priority to assign to the task.  tskIDLE_PRIORITY (which is 0) is the lowest priority.  configMAX_PRIORITIES - 1 is the highest priority. */
+		&xHandle );							/* Used to obtain a handle to the created task.  Not used in this simple demo, so set to NULL. */
 
 	// Create callback queue for backwards communication
 	xQueueHandle cb_queue = xQueueCreate(1, sizeof(char));
@@ -584,6 +629,7 @@ taskNames *dd_return_active_list(){
 }
 
 taskNames *dd_return_overdue_list(){
+
 	if (pOverdueTasks == NULL) {
 		return NULL;
 	}
@@ -622,10 +668,13 @@ taskNames *dd_return_overdue_list(){
 	return head_task_names;
 }
 
+
+
 void vApplicationTickHook( void )
 {
 portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 static uint32_t ulCount = 0;
+
 
 	/* The RTOS tick hook function is enabled by setting configUSE_TICK_HOOK to
 	1 in FreeRTOSConfig.h.
@@ -690,6 +739,9 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
 void vApplicationIdleHook( void )
 {
 volatile size_t xFreeStackSpace;
+
+	xIdleCount += 1;
+
 
 	/* The idle task hook is enabled by setting configUSE_IDLE_HOOK to 1 in
 	FreeRTOSConfig.h.
