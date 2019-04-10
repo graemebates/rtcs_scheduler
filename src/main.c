@@ -492,6 +492,82 @@ void purgeAndRun() {
 	}
 }
 
+taskNames *return_overdue_list(){
+
+	if (pOverdueTasks == NULL) {
+		return NULL;
+	}
+
+	taskNames *head_task_names;
+	taskNames *prev_task_name;
+	taskList *curr_task = pOverdueTasks;
+
+	taskNames temp_task_name = {
+		.name = curr_task->name,
+		.next_cell = NULL
+	};
+
+	taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
+	*task_name = temp_task_name;
+	head_task_names = task_name;
+	prev_task_name = task_name;
+	curr_task = curr_task->next_cell;
+
+	while (curr_task != NULL) {
+		taskNames temp_task_name = {
+			.name = curr_task->name,
+			.next_cell = NULL
+		};
+
+		taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
+		*task_name = temp_task_name;
+
+		prev_task_name->next_cell = task_name;
+		prev_task_name = task_name;
+		curr_task = curr_task->next_cell;
+	}
+
+	pOverdueTasks = NULL;
+
+	return head_task_names;
+}
+
+taskNames *dd_return_active_list(){
+	if (pActiveTasks == NULL) {
+		return NULL;
+	}
+
+	taskNames *head_task_names;
+	taskNames *prev_task_name;
+	taskList *curr_task = pActiveTasks;
+
+	taskNames temp_task_name = {
+		.name = curr_task->name,
+		.next_cell = NULL
+	};
+
+	taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
+	*task_name = temp_task_name;
+	head_task_names = task_name;
+	prev_task_name = task_name;
+	curr_task = curr_task->next_cell;
+
+	while (curr_task != NULL) {
+		taskNames temp_task_name = {
+			.name = curr_task->name,
+			.next_cell = NULL
+		};
+
+		taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
+		*task_name = temp_task_name;
+
+		prev_task_name->next_cell = task_name;
+		prev_task_name = task_name;
+		curr_task = curr_task->next_cell;
+	}
+
+	return head_task_names;
+}
 
 void dd_scheduler(void *pvParameters) {
 	queueMsg msg;
@@ -508,10 +584,12 @@ void dd_scheduler(void *pvParameters) {
 			xQueueSend(msg.cb_queue, "y", portMAX_DELAY);
 			break;
 		case ACTIVE:
-			// TODO: Do this
+			taskList *res = return_active_list();
+			xQueueSend(msg.cb_queue, res, portMAX_DELAY);
 			break;
 		case OVERDUE:
-			// TODO: Do this
+			overdueTasks *res = return_overdue_list();
+			xQueueSend(msg.cb_queue, res, portMAX_DELAY);
 			break;
 		}
 		purgeAndRun();
@@ -592,80 +670,61 @@ uint32_t dd_delete(TaskHandle_t t_handle){
 }
 
 taskNames *dd_return_active_list(){
-	if (pActiveTasks == NULL) {
-		return NULL;
-	}
+	// Create callback queue for backwards communication
+	xQueueHandle cb_queue = xQueueCreate(1, sizeof(*taskList));
 
-	taskNames *head_task_names;
-	taskNames *prev_task_name;
-	taskList *curr_task = pActiveTasks;
-
-	taskNames temp_task_name = {
-		.name = curr_task->name,
-		.next_cell = NULL
+	// Build message for global queue
+	queueMsg msg = {
+			.cb_queue = cb_queue,
+			.task_props = {
+					.handle = NULL,
+					.name = NULL,
+					.deadline = NULL,
+					.task_type = NULL,
+					.creation_time = NULL
+			},
+			.msg_type = ACTIVE
 	};
 
-	taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
-	*task_name = temp_task_name;
-	head_task_names = task_name;
-	prev_task_name = task_name;
-	curr_task = curr_task->next_cell;
+	// Put message on global queue
+	xQueueSend(xQueue, &msg, 0);
 
-	while (curr_task != NULL) {
-		taskNames temp_task_name = {
-			.name = curr_task->name,
-			.next_cell = NULL
-		};
+	// Wait on receiver to call callback queue
+	taskList *res;
+	xQueueReceive(cb_queue, &res, portMAX_DELAY);
+	// Delete callback queue
+	vQueueDelete(cb_queue);
 
-		taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
-		*task_name = temp_task_name;
-
-		prev_task_name->next_cell = task_name;
-		prev_task_name = task_name;
-		curr_task = curr_task->next_cell;
-	}
-
-	return head_task_names;
+	return res;
 }
 
 taskNames *dd_return_overdue_list(){
+	// Create callback queue for backwards communication
+	xQueueHandle cb_queue = xQueueCreate(1, sizeof(*overdueTasks));
 
-	if (pOverdueTasks == NULL) {
-		return NULL;
-	}
-
-	taskNames *head_task_names;
-	taskNames *prev_task_name;
-	taskList *curr_task = pOverdueTasks;
-
-	taskNames temp_task_name = {
-		.name = curr_task->name,
-		.next_cell = NULL
+	// Build message for global queue
+	queueMsg msg = {
+			.cb_queue = cb_queue,
+			.task_props = {
+					.handle = NULL,
+					.name = NULL,
+					.deadline = NULL,
+					.task_type = NULL,
+					.creation_time = NULL
+			},
+			.msg_type = ACTIVE
 	};
 
-	taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
-	*task_name = temp_task_name;
-	head_task_names = task_name;
-	prev_task_name = task_name;
-	curr_task = curr_task->next_cell;
+	// Put message on global queue
+	xQueueSend(xQueue, &msg, 0);
 
-	while (curr_task != NULL) {
-		taskNames temp_task_name = {
-			.name = curr_task->name,
-			.next_cell = NULL
-		};
+	// Wait on receiver to call callback queue
+	overdueTasks *res;
+	xQueueReceive(cb_queue, &res, portMAX_DELAY);
+	// Delete callback queue
+	vQueueDelete(cb_queue);
 
-		taskNames *task_name = (taskNames*)pvPortMalloc(sizeof(taskNames));
-		*task_name = temp_task_name;
-
-		prev_task_name->next_cell = task_name;
-		prev_task_name = task_name;
-		curr_task = curr_task->next_cell;
-	}
-
-	pOverdueTasks = NULL;
-
-	return head_task_names;
+	return res;
 }
 
 
